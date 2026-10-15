@@ -41,5 +41,5 @@ const PHOTOS = [
    Biar kosong = skor simpan dalam telefon masing-masing (game tetap jalan).
    Nak kongsi: isi URL + anon key Supabase awak (saya tolong set up).
    --------------------------------------------------------------------------- */
-const SUPABASE_URL = '';   // cth 'https://xxxx.supabase.co'
-const SUPABASE_KEY = '';   // anon public key
+const SUPABASE_URL = '';   // eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6Z3lrYWFtbHBtaXZmb3FhdWxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIwNjU5NjEsImV4cCI6MjEwNzY0MTk2MX0.goR8Vw2wbW8ucB8gekTW61wNjcR6y5oyJm02kpaCJoM
+const SUPABASE_KEY = '';   // sb_publishable_xiRLIZHHc14DS5LBweLTWg_5jjKRUvg
