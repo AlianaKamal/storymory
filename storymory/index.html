@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Internship Lucky Box</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="bgfx" aria-hidden="true"><span class="orb a"></span><span class="orb b"></span><span class="orb c"></span></div>
+
+<div class="app">
+  <header class="top">
+    <h1>🕹️ The Internship Lucky Box</h1>
+    <div class="sub">one claw · endless surprises</div>
+  </header>
+
+  <main>
+    <div class="box-wrap">
+      <div class="today-pill">📅 Hari ini <b id="today-str">—</b> · bola bersinar emas = kenangan hari ni</div>
+      <div class="cabinet">
+        <canvas id="game" width="360" height="440"></canvas>
+        <div class="cab-glass"></div>
+      </div>
+      <div class="hint" id="hint">Seret cakar dengan jari · lepas untuk cengkam 🕹️</div>
+      <button class="shakebtn" id="shakebtn" hidden>📳 Aktifkan goncang</button>
+    </div>
+  </main>
+</div>
+
+<div class="overlay" id="overlay" hidden>
+  <div id="fx"><div class="glow"></div><div class="rays"></div></div>
+  <div class="flash" id="flash"></div>
+  <div class="reveal" id="reveal" data-r="common">
+    <div class="toprow" id="reveal-top"></div>
+    <div id="reveal-media"></div>
+    <div class="label" id="reveal-label"></div>
+    <p class="cap" id="reveal-cap"></p>
+    <p class="date" id="reveal-date"></p>
+    <div class="acts">
+      <button class="btn" id="again-btn">MAIN LAGI 🕹️</button>
+    </div>
+  </div>
+</div>
+
+<canvas id="confetti" hidden></canvas>
+
+<!-- SPLASH: NFC → 7s blurred memory video. Tap anywhere to skip. Put your video as intro.mp4 -->
+<div id="splash">
+  <video id="introvid" muted playsinline preload="auto" poster="">
+    <source src="intro.mp4" type="video/mp4">
+    <source src="intro.webm" type="video/webm">
+  </video>
+  <canvas id="phvid"></canvas>
+  <div class="splash-veil"></div>
+  <div class="splash-ui">
+    <div class="kick">3 bulan · 1 cakar</div>
+    <div class="st">Kenangan internship korang</div>
+    <div class="splash-tap">ketuk untuk langkau ›</div>
+  </div>
+</div>
+
+<!-- Matter.js = physics engine for the real claw machine -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+<!-- data.js FIRST (the surprise list), then app.js (the logic) -->
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
