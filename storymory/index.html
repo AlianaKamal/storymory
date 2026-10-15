@@ -3,39 +3,69 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>The Internship Lucky Box</title>
+<title>Internship Dash</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<!-- Full-screen cinematic memory reel. Scan NFC → plays immediately, reshuffles every scan, loops. -->
-<div id="reel">
-  <div class="layer" id="layA"></div>
-  <div class="layer" id="layB"></div>
+<!-- ============ TITLE ============ -->
+<section class="screen show" id="screen-title">
+  <div class="title-wrap">
+    <div class="logo">🏃‍♀️ INTERNSHIP DASH</div>
+    <p class="tag">Lari, lompat, kutip kenangan.<br>Siapa kumpul paling banyak, menang! 🏆</p>
+    <button class="btn big" id="to-select">MULA MAIN</button>
+    <button class="btn ghost" id="to-gallery-1">📖 Galeri &amp; Papan Pendahulu</button>
+  </div>
+</section>
 
-  <div class="leak" id="leak"></div>
-  <div class="grain"></div>
-  <div class="vignette"></div>
-  <div class="bars"></div>
+<!-- ============ CHARACTER SELECT ============ -->
+<section class="screen" id="screen-select" hidden>
+  <h2 class="scr-title">Pilih watak kau</h2>
+  <div class="char-grid" id="char-grid"></div>
+  <button class="btn ghost" id="back-title">← Balik</button>
+</section>
 
-  <div class="title-card" id="title"><span id="title-txt"></span></div>
-  <div class="lower" id="lower"></div>
-  <div class="stamp" id="stamp"></div>
-  <div class="otd-badge" id="otd" hidden>📅 PADA HARI INI</div>
+<!-- ============ GAME ============ -->
+<section class="screen game" id="screen-game" hidden>
+  <div class="hud">
+    <span class="hud-char" id="hud-char">—</span>
+    <span class="hud-score">📸 <b id="hud-score">0</b> / <span id="hud-total">0</span></span>
+    <button class="hud-exit" id="hud-exit">✕</button>
+  </div>
+  <canvas id="game"></canvas>
+  <div class="controls">
+    <div class="dpad">
+      <button class="ctl" id="btn-left" aria-label="Kiri">◀</button>
+      <button class="ctl" id="btn-right" aria-label="Kanan">▶</button>
+    </div>
+    <button class="ctl jump" id="btn-jump" aria-label="Lompat">⤴ LOMPAT</button>
+  </div>
+</section>
 
-  <div class="brand">🎞️ KENANGAN INTERNSHIP</div>
-  <button class="unmute" id="unmute" hidden>🔊 ketuk untuk bunyi</button>
-  <div class="loadnote" id="loadnote">memuatkan kenangan…</div>
-</div>
+<!-- ============ WIN / RESULT ============ -->
+<section class="screen" id="screen-win" hidden>
+  <div class="win-wrap">
+    <div class="win-emoji" id="win-emoji">🎉</div>
+    <h2 class="scr-title" id="win-title">Habis pusingan!</h2>
+    <p class="win-sub" id="win-sub"></p>
+    <div class="board" id="win-board"></div>
+    <button class="btn big" id="win-again">MAIN LAGI</button>
+    <button class="btn ghost" id="win-gallery">📖 Lihat koleksi</button>
+  </div>
+</section>
 
-<!-- optional background music: letak music.mp3 dalam folder yang sama -->
-<audio id="bgm" loop preload="auto">
-  <source src="music.mp3" type="audio/mpeg">
-  <source src="music.ogg" type="audio/ogg">
-</audio>
+<!-- ============ GALLERY + LEADERBOARD ============ -->
+<section class="screen" id="screen-gallery" hidden>
+  <h2 class="scr-title">Papan Pendahulu 🏆</h2>
+  <div class="board" id="gal-board"></div>
+  <h3 class="gal-sub">Koleksi <span id="gal-char"></span></h3>
+  <div class="gal-grid" id="gal-grid"></div>
+  <button class="btn ghost" id="gal-back">← Balik</button>
+</section>
 
-<!-- data.js FIRST (the memory list), then app.js (the reel engine) -->
+<canvas id="confetti" hidden></canvas>
+
 <script src="data.js"></script>
 <script src="app.js"></script>
 </body>
