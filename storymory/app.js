@@ -8,8 +8,8 @@
 
 const $=s=>document.querySelector(s);
 const CHARS=[
-  {id:'Nurin', color:'#ff5c8a', emoji:'🧕', vehicle:'cat'},
-  {id:'Haziq', color:'#38bdf8', emoji:'🧑', vehicle:'motor'},
+  {id:'Nurin', color:'#ff5c8a', emoji:'🧕', vehicle:'rabbit'},
+  {id:'Haziq', color:'#38bdf8', emoji:'🧑', vehicle:'motorsport'},
   {id:'Yana',  color:'#a855f7', emoji:'👩', vehicle:'hilux'},
 ];
 const FACE_SRC = (typeof FACES!=='undefined') ? FACES : {};
@@ -244,37 +244,60 @@ function drawVehicle(){
   ctx.save(); ctx.translate(cx,feet); ctx.scale(f,1);   // forward = +x
   ctx.shadowColor='rgba(0,0,0,.25)'; ctx.shadowBlur=6;
 
-  if(me.vehicle==='motor'){
-    wheel(-22,-14,14); wheel(22,-14,14);
-    ctx.shadowBlur=0; ctx.fillStyle=me.color; roundRect(-26,-30,52,16,6); ctx.fill();         // frame
-    ctx.fillStyle='#1b2d53'; roundRect(-18,-40,20,12,4); ctx.fill();                           // seat
-    ctx.strokeStyle='#333'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(22,-28); ctx.lineTo(30,-44); ctx.stroke(); // handle
-    ctx.fillStyle=me.color; roundRect(-10,-54,16,22,7); ctx.fill();                            // rider body
-    drawFaceAt(-2,-70,20,bob,f);
-  } else if(me.vehicle==='cat'){
+  if(me.vehicle==='motorsport'){
+    wheel(-24,-14,15); wheel(26,-14,15);
     ctx.shadowBlur=0;
-    ctx.fillStyle='#ffb3c8';
-    ctx.beginPath(); ctx.ellipse(0,-20,34,18,0,0,7); ctx.fill();                                // body
-    // legs
-    ctx.fillStyle='#ff9ebb'; [-20,-6,8,22].forEach(lx=>{ roundRect(lx,-8,7,10,3); ctx.fill(); });
-    // tail
-    ctx.strokeStyle='#ffb3c8'; ctx.lineWidth=7; ctx.beginPath(); ctx.moveTo(-32,-22); ctx.quadraticCurveTo(-48,-30,-42,-46); ctx.stroke();
+    // low sleek body
+    ctx.fillStyle=me.color; ctx.beginPath(); ctx.moveTo(-26,-20); ctx.lineTo(18,-20); ctx.lineTo(32,-30); ctx.lineTo(36,-20); ctx.lineTo(30,-13); ctx.lineTo(-24,-13); ctx.closePath(); ctx.fill();
+    // front windscreen / fairing
+    ctx.fillStyle='#1b2d53'; ctx.beginPath(); ctx.moveTo(32,-30); ctx.lineTo(42,-35); ctx.lineTo(37,-22); ctx.closePath(); ctx.fill();
+    // tail cowl (sporty up-kick)
+    ctx.fillStyle=me.color; ctx.beginPath(); ctx.moveTo(-26,-20); ctx.lineTo(-34,-36); ctx.lineTo(-20,-27); ctx.closePath(); ctx.fill();
+    // seat + exhaust
+    ctx.fillStyle='#111'; roundRect(-14,-31,26,8,3); ctx.fill();
+    ctx.fillStyle='#cfcfcf'; roundRect(20,-12,16,5,2); ctx.fill();
+    // rider leaning forward
+    ctx.fillStyle=me.color; roundRect(-4,-52,16,22,7); ctx.fill();
+    drawFaceAt(6,-68,20,bob,f);
+    // speed lines
+    ctx.strokeStyle='rgba(255,255,255,.5)'; ctx.lineWidth=2;
+    for(let i=0;i<3;i++){ ctx.beginPath(); ctx.moveTo(-42-i*9,-16-i*7); ctx.lineTo(-26-i*9,-16-i*7); ctx.stroke(); }
+  } else if(me.vehicle==='rabbit'){
+    ctx.shadowBlur=0;
+    // body
+    ctx.fillStyle='#ffffff'; ctx.beginPath(); ctx.ellipse(0,-20,32,18,0,0,7); ctx.fill();
+    // feet
+    ctx.fillStyle='#f0f0f3'; [-20,16].forEach(lx=>{ roundRect(lx,-8,18,8,4); ctx.fill(); });
+    // puff tail
+    ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(-32,-20,8,0,7); ctx.fill();
     // head
-    ctx.fillStyle='#ffb3c8'; ctx.beginPath(); ctx.arc(30,-30,15,0,7); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(22,-42); ctx.lineTo(26,-30); ctx.lineTo(18,-32); ctx.closePath();
-    ctx.moveTo(38,-42); ctx.lineTo(34,-30); ctx.lineTo(42,-32); ctx.closePath(); ctx.fill();     // ears
-    ctx.fillStyle='#223'; ctx.beginPath(); ctx.arc(26,-31,2,0,7); ctx.arc(34,-31,2,0,7); ctx.fill();
-    ctx.fillStyle='#ff6f91'; ctx.beginPath(); ctx.arc(30,-27,2,0,7); ctx.fill();
+    ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(28,-30,15,0,7); ctx.fill();
+    // long ears
+    ctx.fillStyle='#fff'; roundRect(21,-66,8,28,4); ctx.fill(); roundRect(32,-66,8,28,4); ctx.fill();
+    ctx.fillStyle='#ffc0d4'; roundRect(23,-62,4,20,2); ctx.fill(); roundRect(34,-62,4,20,2); ctx.fill();
+    // face
+    ctx.fillStyle='#223'; ctx.beginPath(); ctx.arc(24,-31,2,0,7); ctx.arc(33,-31,2,0,7); ctx.fill();
+    ctx.fillStyle='#ff6f91'; ctx.beginPath(); ctx.arc(28,-26,2.2,0,7); ctx.fill();
     // rider
     ctx.fillStyle=me.color; roundRect(-10,-46,16,22,7); ctx.fill();
     drawFaceAt(-2,-62,19,bob,f);
-  } else { // hilux
-    wheel(-20,-13,13); wheel(22,-13,13);
-    ctx.shadowBlur=0; ctx.fillStyle=me.color; roundRect(-34,-30,70,18,5); ctx.fill();            // chassis/bed
-    ctx.fillStyle=me.color; roundRect(-34,-50,34,24,6); ctx.fill();                               // cab
-    ctx.fillStyle='#bfe3ff'; roundRect(-30,-46,24,15,4); ctx.fill();                              // window
-    ctx.fillStyle='rgba(0,0,0,.15)'; roundRect(2,-28,30,10,3); ctx.fill();                        // bed shade
-    drawFaceAt(-17,-58,18,bob,f);                                                                 // driver head above cab
+  } else { // hilux (nicer)
+    wheel(-22,-13,14); wheel(24,-13,14);
+    ctx.shadowBlur=0;
+    // lower body + highlight
+    ctx.fillStyle=me.color; roundRect(-38,-32,80,20,8); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.18)'; roundRect(-38,-32,80,7,8); ctx.fill();
+    // cab
+    ctx.fillStyle=me.color; roundRect(-38,-54,42,26,9); ctx.fill();
+    // two windows
+    ctx.fillStyle='#bfe3ff'; roundRect(-34,-50,17,16,4); ctx.fill(); roundRect(-15,-50,15,16,4); ctx.fill();
+    // bed rails
+    ctx.strokeStyle=me.color; ctx.lineWidth=3; ctx.strokeRect(4,-30,32,12);
+    // headlight + chrome bumper
+    ctx.fillStyle='#ffe08a'; roundRect(39,-27,5,9,2); ctx.fill();
+    ctx.fillStyle='#e6e6e6'; roundRect(-40,-16,84,4,2); ctx.fill();
+    // driver head above cab
+    drawFaceAt(-20,-62,18,bob,f);
   }
   ctx.restore();
 
@@ -342,7 +365,7 @@ function confetti(strong){ cv.hidden=false; cv.width=innerWidth; cv.height=inner
 
 /* ---- character select ---- */
 function buildCharSelect(){ const g=$('#char-grid'); g.innerHTML='';
-  const veh={cat:'🐱',motor:'🏍️',hilux:'🛻'};
+  const veh={rabbit:'🐰',motorsport:'🏍️',hilux:'🛻'};
   CHARS.forEach(c=>{ const v=getColl(c.id).size; const card=document.createElement('button'); card.className='char-card';
     card.innerHTML=`<div class="char-ava" style="background:${c.color}">${c.emoji}</div>
       <div class="char-name">${c.id} ${veh[c.vehicle]}</div><div class="char-count">📸 ${v} gambar</div>`;
