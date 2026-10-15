@@ -195,26 +195,33 @@ function setHint(t){hint.textContent=t;}
   }
   (function shakeSetup(){
     const btn=$('#shakebtn');
-    let last={x:0,y:0,z:0}, lastT=0, primed=false;
+    btn.hidden=false;                                   // always show — also works as a manual "kocok"
+    let last={x:0,y:0,z:0}, lastT=0, primed=false, motionOn=false;
     function onMotion(e){
       const a=e.accelerationIncludingGravity||e.acceleration; if(!a)return;
-      const now=Date.now(); if(now-lastT<80)return; lastT=now;
+      const now=Date.now(); if(now-lastT<70)return; lastT=now;
       const dx=Math.abs((a.x||0)-last.x),dy=Math.abs((a.y||0)-last.y),dz=Math.abs((a.z||0)-last.z);
       last={x:a.x||0,y:a.y||0,z:a.z||0};
       const delta=dx+dy+dz;
-      if(primed && delta>16){ jiggle(delta/16); setHint('Goncang! Bola bergerak 🌀');
+      if(primed && delta>11){ jiggle(delta/11); setHint('Goncang! Bola bergerak 🌀');
         if(navigator.vibrate)navigator.vibrate(30); }
     }
-    function start(){ window.addEventListener('devicemotion',onMotion);
-      setTimeout(()=>primed=true,400);   // ignore the first jerk from tapping the button
-      btn.hidden=true; setHint('Goncang telefon untuk kacau bola 📳'); }
-    if(typeof DeviceMotionEvent==='undefined'){ return; }         // no sensor (desktop) → hide button
-    if(typeof DeviceMotionEvent.requestPermission==='function'){  // iOS: needs a tap to allow
-      btn.hidden=false;
-      btn.addEventListener('click',async()=>{ try{ const r=await DeviceMotionEvent.requestPermission();
-        if(r==='granted')start(); else setHint('Kebenaran gerakan ditolak — guna jari je 🕹️'); }
-        catch(err){ setHint('Gerakan tak disokong — guna jari je 🕹️'); } });
-    }else{ start(); }                                             // Android & others: just works
+    function enableMotion(){
+      if(motionOn) return Promise.resolve(true);
+      const attach=()=>{ window.addEventListener('devicemotion',onMotion); motionOn=true; setTimeout(()=>primed=true,400); };
+      if(typeof DeviceMotionEvent!=='undefined' && typeof DeviceMotionEvent.requestPermission==='function'){
+        return DeviceMotionEvent.requestPermission().then(r=>{ if(r==='granted'){attach();return true;} return false; }).catch(()=>false);
+      }
+      if(typeof DeviceMotionEvent!=='undefined'){ attach(); return Promise.resolve(true); }
+      return Promise.resolve(false);                    // no sensor (laptop)
+    }
+    // tapping the button ALWAYS jiggles once, and also turns on shake-detection
+    btn.addEventListener('click',()=>{
+      jiggle(1.6); if(navigator.vibrate)navigator.vibrate(25);
+      enableMotion().then(ok=>{ setHint(ok ? 'Goncang telefon untuk kacau bola 📳' : 'Tekan "Kocok bola" untuk gerak bola 🌀'); });
+    });
+    // on Android, turn motion on quietly too (no permission prompt there)
+    if(typeof DeviceMotionEvent!=='undefined' && typeof DeviceMotionEvent.requestPermission!=='function'){ enableMotion(); }
   })();
 
   // drive the claw every physics tick
