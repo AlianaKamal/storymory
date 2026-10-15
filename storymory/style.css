@@ -1,0 +1,109 @@
+/* ===========================================================================
+   style.css  —  CINEMATIC MEMORY REEL 🎞️  (gaya filem lama: hitam-putih, grain)
+   Nak tukar warna aksen: ubah --accent / --gold di bawah.
+   =========================================================================== */
+
+:root{
+  --bg:#000;
+  --ink:#fff;
+  --ink-soft:rgba(255,255,255,.72);
+  --accent:#ff5c7a;        /* warm film tint / highlights */
+  --gold:#ffd23f;          /* legendary / "on this day" */
+  --font-display:'Fredoka', ui-rounded, 'Segoe UI', system-ui, sans-serif;
+  --font-body:'Nunito', ui-rounded, system-ui, sans-serif;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{ margin:0; background:#000; color:var(--ink); font-family:var(--font-body); overflow:hidden;
+  -webkit-font-smoothing:antialiased }
+
+#reel{ position:fixed; inset:0; background:#000; overflow:hidden }
+
+/* two stacked image layers for crossfade */
+.layer{ position:absolute; inset:0; background-position:center; background-size:cover; background-repeat:no-repeat;
+  opacity:0; will-change:opacity, transform }
+.layer.show{ opacity:1 }
+/* Ken Burns zoom/pan — applied per frame via JS class */
+.layer.kb1{ animation:kb1 var(--dur,1200ms) linear both }
+.layer.kb2{ animation:kb2 var(--dur,1200ms) linear both }
+.layer.kb3{ animation:kb3 var(--dur,1200ms) linear both }
+@keyframes kb1{ from{transform:scale(1.06) translate(0,0)} to{transform:scale(1.22) translate(-3%,-2%)} }
+@keyframes kb2{ from{transform:scale(1.22) translate(3%,2%)} to{transform:scale(1.06) translate(0,0)} }
+@keyframes kb3{ from{transform:scale(1.10) translate(-2%,1%)} to{transform:scale(1.20) translate(2%,-2%)} }
+
+/* placeholder frame (no real photo yet) — stylized memory tile */
+.phframe{ width:100%; height:100%; display:grid; place-items:center }
+.phframe .e{ font-size:28vmin; opacity:.9; filter:grayscale(1) contrast(1.1) }
+
+/* film grain */
+.grain{ position:absolute; inset:-50%; pointer-events:none; opacity:.10; mix-blend-mode:screen;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  animation:grain .5s steps(2) infinite }
+@keyframes grain{ 0%{transform:translate(0,0)} 50%{transform:translate(-4%,3%)} 100%{transform:translate(3%,-2%)} }
+
+/* vignette + subtle flicker */
+.vignette{ position:absolute; inset:0; pointer-events:none;
+  background:radial-gradient(130% 100% at 50% 50%, transparent 55%, rgba(0,0,0,.72) 100%);
+  animation:flicker 4s ease-in-out infinite }
+@keyframes flicker{ 0%,100%{opacity:1} 48%{opacity:.92} 52%{opacity:.97} }
+
+/* cinematic letterbox bars */
+.bars{ position:absolute; inset:0; pointer-events:none }
+.bars::before,.bars::after{ content:""; position:absolute; left:0; right:0; height:7.5vh; background:#000 }
+.bars::before{ top:0; padding-top:env(safe-area-inset-top,0px) }
+.bars::after{ bottom:0; padding-bottom:env(safe-area-inset-bottom,0px) }
+
+/* light-leak flash on cuts */
+.leak{ position:absolute; inset:0; pointer-events:none; opacity:0; mix-blend-mode:screen;
+  background:radial-gradient(60% 80% at 80% 20%, rgba(255,150,90,.8), transparent 60%),
+             radial-gradient(50% 70% at 10% 90%, rgba(120,180,255,.5), transparent 60%) }
+.leak.go{ animation:leak .5s ease-out }
+@keyframes leak{ 0%{opacity:0} 25%{opacity:.85} 100%{opacity:0} }
+
+/* title / interstitial cards */
+.title-card{ position:absolute; inset:0; display:grid; place-items:center; padding:12vw; text-align:center;
+  opacity:0; pointer-events:none }
+.title-card.go{ animation:titlein 900ms ease both }
+.title-card #title-txt{ font-family:var(--font-display); font-weight:700; color:#fff;
+  font-size:clamp(1.8rem,9vw,3rem); line-height:1.05; letter-spacing:.5px; text-wrap:balance;
+  text-shadow:0 2px 30px rgba(0,0,0,.8) }
+@keyframes titlein{ 0%{opacity:0;transform:scale(1.08) translateY(10px); letter-spacing:2px}
+  20%{opacity:1} 80%{opacity:1} 100%{opacity:0; transform:scale(1.02)} }
+
+/* lower-third caption */
+.lower{ position:absolute; left:0; right:0; bottom:calc(9vh + env(safe-area-inset-bottom,0px)); padding:0 9vw 14px;
+  text-align:center; opacity:0; pointer-events:none }
+.lower.go{ animation:lowerin 1.3s ease both }
+.lower span{ font-family:var(--font-display); font-weight:600; color:#fff; font-size:clamp(1rem,4.6vw,1.3rem);
+  text-shadow:0 2px 14px rgba(0,0,0,.9); line-height:1.2 }
+@keyframes lowerin{ 0%{opacity:0;transform:translateY(14px)} 15%{opacity:1;transform:none} 82%{opacity:1} 100%{opacity:0} }
+
+/* camcorder date stamp */
+.stamp{ position:absolute; right:14px; top:calc(8.5vh + 10px + env(safe-area-inset-top,0px));
+  font-family:'Courier New', monospace; font-weight:700; font-size:.82rem; letter-spacing:.06em;
+  color:var(--gold); text-shadow:0 0 8px rgba(255,210,63,.7),0 1px 2px #000; opacity:.9 }
+
+/* "on this day" badge */
+.otd-badge{ position:absolute; left:14px; top:calc(8.5vh + 8px + env(safe-area-inset-top,0px));
+  font-family:var(--font-display); font-weight:600; font-size:.66rem; letter-spacing:.1em; color:#1a1205;
+  background:linear-gradient(90deg,var(--gold),#ff8a3c); padding:5px 10px; border-radius:999px;
+  box-shadow:0 0 16px rgba(255,210,63,.7); animation:badgepop .4s ease both }
+.otd-badge[hidden]{ display:none }
+@keyframes badgepop{ from{transform:scale(.6);opacity:0} to{transform:scale(1);opacity:1} }
+
+/* persistent brand + unmute + load note */
+.brand{ position:absolute; left:14px; bottom:calc(9vh + 10px + env(safe-area-inset-bottom,0px));
+  font-family:var(--font-body); font-weight:800; font-size:.62rem; letter-spacing:.2em; color:rgba(255,255,255,.65) }
+.unmute{ position:absolute; right:14px; bottom:calc(9vh + 8px + env(safe-area-inset-bottom,0px));
+  font-family:var(--font-body); font-weight:700; font-size:.72rem; color:#fff; cursor:pointer;
+  background:rgba(0,0,0,.45); border:1px solid rgba(255,255,255,.35); border-radius:999px; padding:7px 13px; backdrop-filter:blur(6px) }
+.unmute[hidden]{ display:none }
+.loadnote{ position:absolute; inset:0; display:grid; place-items:center; color:rgba(255,255,255,.6);
+  font-weight:700; letter-spacing:.1em; font-size:.85rem }
+.loadnote[hidden]{ display:none }
+
+@media (prefers-reduced-motion: reduce){
+  .grain,.vignette{ animation:none!important }
+}

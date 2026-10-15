@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Internship Lucky Box</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Full-screen cinematic memory reel. Scan NFC → plays immediately, reshuffles every scan, loops. -->
+<div id="reel">
+  <div class="layer" id="layA"></div>
+  <div class="layer" id="layB"></div>
+
+  <div class="leak" id="leak"></div>
+  <div class="grain"></div>
+  <div class="vignette"></div>
+  <div class="bars"></div>
+
+  <div class="title-card" id="title"><span id="title-txt"></span></div>
+  <div class="lower" id="lower"></div>
+  <div class="stamp" id="stamp"></div>
+  <div class="otd-badge" id="otd" hidden>📅 PADA HARI INI</div>
+
+  <div class="brand">🎞️ KENANGAN INTERNSHIP</div>
+  <button class="unmute" id="unmute" hidden>🔊 ketuk untuk bunyi</button>
+  <div class="loadnote" id="loadnote">memuatkan kenangan…</div>
+</div>
+
+<!-- optional background music: letak music.mp3 dalam folder yang sama -->
+<audio id="bgm" loop preload="auto">
+  <source src="music.mp3" type="audio/mpeg">
+  <source src="music.ogg" type="audio/ogg">
+</audio>
+
+<!-- data.js FIRST (the memory list), then app.js (the reel engine) -->
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
