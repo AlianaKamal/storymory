@@ -14,6 +14,19 @@ const CHARS=[
 ];
 const FACE_SRC = (typeof FACES!=='undefined') ? FACES : {};
 
+/* ---- which character THIS phone is locked to ----
+   Set by the link ( ?me=Nurin  or  #Nurin ) or by the first pick on this phone.
+   Each person gets their own NFC tag/link, so they can only play their own. */
+function getOwner(){ try{return localStorage.getItem('dash_owner')||'';}catch(e){return '';} }
+function setOwner(c){ try{localStorage.setItem('dash_owner',c);}catch(e){} }
+(function initOwner(){
+  const q=new URLSearchParams(location.search).get('me');
+  const h=decodeURIComponent((location.hash||'').replace('#','')).trim();
+  const want=(q||h||'').toLowerCase();
+  const match=CHARS.find(c=>c.id.toLowerCase()===want);
+  if(match) setOwner(match.id);     // link always wins (lets you re-assign a phone)
+})();
+
 /* ---- photo pool (from data.js) ---- */
 const POOL=[];
 CONTENT.forEach(it=>POOL.push({id:it.id, img:it.img||null, caption:it.caption||''}));
@@ -226,9 +239,9 @@ function drawSecret(s){ const t=Date.now()/300; const pr=1+Math.sin(t)*0.08; ctx
 function drawFace(r,bob,f){ // draws the rider head/face, un-mirrored
   const src=FACE_SRC[me.id]; const im=src?getImg(src):null;
   ctx.save(); ctx.translate(0,bob); ctx.scale(f,1);
-  ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(0,0,r+2,0,7); ctx.fill();   // white rim
-  if(ready(im)){ ctx.save(); ctx.beginPath(); ctx.arc(0,0,r,0,7); ctx.clip(); ctx.drawImage(im,-r,-r,r*2,r*2); ctx.restore(); }
-  else { ctx.fillStyle='#ffd9a8'; ctx.beginPath(); ctx.arc(0,0,r,0,7); ctx.fill();   // cute face
+  if(ready(im)){ const s=r*2.3; ctx.drawImage(im,-s/2,-s/2,s,s); }   // cutout head (transparent), no rim
+  else { ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(0,0,r+2,0,7); ctx.fill();   // white rim (fallback)
+    ctx.fillStyle='#ffd9a8'; ctx.beginPath(); ctx.arc(0,0,r,0,7); ctx.fill();   // cute face
     ctx.fillStyle='#223'; ctx.beginPath(); ctx.arc(-r*0.32,-r*0.1,r*0.14,0,7); ctx.arc(r*0.32,-r*0.1,r*0.14,0,7); ctx.fill();
     ctx.strokeStyle='#c0392b'; ctx.lineWidth=2.4; ctx.beginPath(); ctx.arc(0,r*0.18,r*0.4,0.15*Math.PI,0.85*Math.PI); ctx.stroke();
     ctx.fillStyle='rgba(255,120,150,.5)'; ctx.beginPath(); ctx.arc(-r*0.5,r*0.22,r*0.16,0,7); ctx.arc(r*0.5,r*0.22,r*0.16,0,7); ctx.fill(); }
@@ -366,10 +379,15 @@ function confetti(strong){ cv.hidden=false; cv.width=innerWidth; cv.height=inner
 /* ---- character select ---- */
 function buildCharSelect(){ const g=$('#char-grid'); g.innerHTML='';
   const veh={rabbit:'🐰',motorsport:'🏍️',hilux:'🛻'};
-  CHARS.forEach(c=>{ const v=getColl(c.id).size; const card=document.createElement('button'); card.className='char-card';
-    card.innerHTML=`<div class="char-ava" style="background:${c.color}">${c.emoji}</div>
-      <div class="char-name">${c.id} ${veh[c.vehicle]}</div><div class="char-count">📸 ${v} gambar</div>`;
-    card.addEventListener('click',()=>{ ac(); me=c; startGame(); }); g.appendChild(card); });
+  const owner=getOwner();
+  CHARS.forEach(c=>{ const v=getColl(c.id).size; const locked = owner && c.id!==owner;
+    const card=document.createElement('button'); card.className='char-card'+(locked?' locked':'');
+    card.innerHTML=`<div class="char-ava" style="background:${c.color}">${locked?'🔒':c.emoji}</div>
+      <div class="char-name">${c.id} ${veh[c.vehicle]}</div>
+      <div class="char-count">${locked?'Bukan awak':('📸 '+v+' gambar')}</div>`;
+    if(locked){ card.disabled=true; }
+    else card.addEventListener('click',()=>{ ac(); me=c; if(!owner) setOwner(c.id); startGame(); });
+    g.appendChild(card); });
 }
 
 /* ---- controls ---- */
@@ -382,7 +400,7 @@ document.addEventListener('keyup',e=>{ if(e.key==='ArrowLeft')keys.left=false; i
 
 /* ---- nav ---- */
 $('#to-select').addEventListener('click',()=>{ ac(); buildCharSelect(); showScreen('screen-select'); });
-$('#to-gallery-1').addEventListener('click',()=>{ me=me||CHARS[0]; buildGallery(me.id); showScreen('screen-gallery'); });
+$('#to-gallery-1').addEventListener('click',()=>{ const o=getOwner(); me=me||(o?CHARS.find(c=>c.id===o):CHARS[0]); buildGallery(me.id); showScreen('screen-gallery'); });
 $('#back-title').addEventListener('click',()=>showScreen('screen-title'));
 $('#hud-exit').addEventListener('click',()=>{ running=false; cancelAnimationFrame(raf); showScreen('screen-title'); });
 $('#win-again').addEventListener('click',()=>startGame());
