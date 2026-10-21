@@ -178,10 +178,10 @@ function init3D(){
   // Fringe / side locks to give the head a softer cartoon silhouette.
   const hairMat=new THREE.MeshLambertMaterial({color:hairColor});
   const fringe=new THREE.Mesh(new THREE.SphereGeometry(0.22,14,12),hairMat);
-  fringe.scale.set(1.25,.58,.6); fringe.position.set(0,1.94,.43); player3d.add(fringe);
+  fringe.scale.set(1.25,.58,.6); fringe.position.set(0,1.94,-.43); player3d.add(fringe);
   for(const side of [-1,1]){
     const lock=new THREE.Mesh(new THREE.SphereGeometry(.17,12,10),hairMat);
-    lock.position.set(side*.37,1.58,.25); lock.scale.set(.8,1.2,.7); player3d.add(lock);
+    lock.position.set(side*.37,1.58,-.25); lock.scale.set(.8,1.2,.7); player3d.add(lock);
   }
   // Eyes, blush and smile are simple geometry so no external art files are needed.
   const eyeMat=new THREE.MeshBasicMaterial({color:0x30233a});
@@ -189,53 +189,53 @@ function init3D(){
   const blushMat=new THREE.MeshBasicMaterial({color:0xff9eb5,transparent:true,opacity:.82});
   for(const side of [-1,1]){
     const eye=new THREE.Mesh(new THREE.SphereGeometry(.055,10,8),eyeMat);
-    eye.position.set(side*.16,1.62,.555); player3d.add(eye);
+    eye.position.set(side*.16,1.62,-.555); player3d.add(eye);
     const shine=new THREE.Mesh(new THREE.SphereGeometry(.018,8,6),shineMat);
-    shine.position.set(side*.14,1.645,.601); player3d.add(shine);
+    shine.position.set(side*.14,1.645,-.601); player3d.add(shine);
     const cheek=new THREE.Mesh(new THREE.SphereGeometry(.075,10,8),blushMat);
-    cheek.scale.set(1,.58,.25); cheek.position.set(side*.27,1.51,.52); player3d.add(cheek);
+    cheek.scale.set(1,.58,.25); cheek.position.set(side*.27,1.51,-.52); player3d.add(cheek);
   }
   const mouth=new THREE.Mesh(new THREE.TorusGeometry(.055,.012,6,12,Math.PI),new THREE.MeshBasicMaterial({color:0x8b3d53}));
-  mouth.position.set(0,1.49,.575); mouth.rotation.z=Math.PI; player3d.add(mouth);
+  mouth.position.set(0,1.49,-.575); mouth.rotation.z=Math.PI; player3d.add(mouth);
   // Optional cute hair accessories distinguish the characters.
   if(me.id==='Nurin'){
     const bowMat=new THREE.MeshLambertMaterial({color:0xff4fa3});
     for(const side of [-1,1]){
       const bow=new THREE.Mesh(new THREE.SphereGeometry(.12,10,8),bowMat);
-      bow.scale.set(1.2,.7,.55); bow.position.set(side*.31,1.99,.28); player3d.add(bow);
+      bow.scale.set(1.2,.7,.55); bow.position.set(side*.31,1.99,-.28); player3d.add(bow);
     }
   } else if(me.id==='Haziq'){
     const spikeMat=new THREE.MeshLambertMaterial({color:0x34221c});
     for(let i=0;i<3;i++){
       const spike=new THREE.Mesh(new THREE.ConeGeometry(.12,.27,8),spikeMat);
-      spike.position.set((i-1)*.17,2.02,.12); spike.rotation.z=(i-1)*-.25; player3d.add(spike);
+      spike.position.set((i-1)*.17,2.02,-.12); spike.rotation.z=(i-1)*-.25; player3d.add(spike);
     }
   } else {
     const clip=new THREE.Mesh(new THREE.SphereGeometry(.11,10,8),new THREE.MeshLambertMaterial({color:0xffd83d}));
-    clip.position.set(.36,1.91,.28); player3d.add(clip);
+    clip.position.set(.36,1.91,-.28); player3d.add(clip);
   }
   // Arms angle forward to the handlebars.
   const armMat=new THREE.MeshLambertMaterial({color:col});
   const armL=new THREE.Mesh(new THREE.CapsuleGeometry(.105,.34,6,10),armMat);
-  armL.position.set(-.36,1.12,.31); armL.rotation.x=Math.PI/2-.25; armL.rotation.z=.13; player3d.add(armL);
+  armL.position.set(-.36,1.12,-.31); armL.rotation.x=-(Math.PI/2-.25); armL.rotation.z=.13; player3d.add(armL);
   const armR=new THREE.Mesh(new THREE.CapsuleGeometry(.105,.34,6,10),armMat);
-  armR.position.set(.36,1.12,.31); armR.rotation.x=Math.PI/2-.25; armR.rotation.z=-.13; player3d.add(armR);
+  armR.position.set(.36,1.12,-.31); armR.rotation.x=-(Math.PI/2-.25); armR.rotation.z=-.13; player3d.add(armR);
   // Bent legs sit to either side of the ride; no running swing while riding.
   const legMat=new THREE.MeshLambertMaterial({color:0x303c62});
   const shoeMat=new THREE.MeshLambertMaterial({color:0xffffff});
   function makeLeg(x){
     const grp=new THREE.Group(); grp.position.set(x,.57,.06);
     const thigh=new THREE.Mesh(new THREE.CapsuleGeometry(.12,.28,6,10),legMat);
-    thigh.rotation.x=1.05; thigh.position.set(0,-.03,.10); grp.add(thigh);
+    thigh.rotation.x=1.05; thigh.position.set(0,-.03,-.10); grp.add(thigh);
     const shoe=new THREE.Mesh(new THREE.SphereGeometry(.15,12,10),shoeMat);
-    shoe.scale.set(1,.65,1.35); shoe.position.set(0,-.08,.32); grp.add(shoe);
+    shoe.scale.set(1,.65,1.35); shoe.position.set(0,-.08,-.32); grp.add(shoe);
     player3d.add(grp); return grp;
   }
   legL=makeLeg(-.26); legR=makeLeg(.26);
   // Vehicle front points toward the camera, matching the reference screenshot.
   rideWheels.length=0;
   rideGroup=makeRide(me.vehicle);
-  rideGroup.rotation.y=Math.PI;
+  // Vehicle front already points toward -Z; do not rotate it toward the camera.
   player3d.add(rideGroup);
   scene.add(player3d);
 
