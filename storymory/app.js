@@ -67,11 +67,11 @@ const ZONES=[
   {id:'pengambilan', name:'Bilik Pengambilan',       bg:0xff9a6b, fog:0xffbd96, floor:0xffe0c4, lane:0xffc49a, accent:0xff2e97,
     ground:0xe88a4a, blds:[0xff2e6a,0xff7a1f,0xffc21f,0xff5c8a,0xc44bff,0x2ec4ff,0x3ad16a]},
 ];
-const ZONE_LEN=230, LANE=2.2, SPAWN_Z=-130;
+const ZONE_LEN=230, LANE=2.2, SPAWN_Z=-96;
 
 let me=null;
 let renderer, scene, camera, clock, THREEok=false;
-let floorMesh, floorTex, groundMesh, player3d, legL, legR, rideGroup;
+let floorMesh, floorTex, groundMesh, player3d, legL, legR, rideGroup, campusSign;
 const rideWheels=[];
 let items=[];            // {mesh,kind,lane,z,done,item,spin}
 let scenery=[], nextScene;   // side buildings/trees
@@ -107,17 +107,69 @@ function makeRide(vehicle){
   const g=new THREE.Group();
   const mat=(color,extra={})=>new THREE.MeshLambertMaterial({color,...extra});
   if(vehicle==='rabbit'){
-    // Pink bunny scooter
-    const deck=new THREE.Mesh(new THREE.BoxGeometry(.62,.16,1.0),mat(0xff58a7)); deck.position.set(0,.38,.08); g.add(deck);
-    const front=new THREE.Mesh(new THREE.CylinderGeometry(.09,.09,.62,12),mat(0x5b5f80)); front.position.set(0,.67,-.48); front.rotation.x=.15; g.add(front);
-    const handle=new THREE.Mesh(new THREE.CylinderGeometry(.055,.055,.62,10),mat(0x8cddff)); handle.position.set(0,.96,-.52); handle.rotation.z=Math.PI/2; g.add(handle);
-    const lamp=new THREE.Mesh(new THREE.SphereGeometry(.16,12,12),mat(0xfff2a0,{emissive:0xffb500,emissiveIntensity:.3})); lamp.position.set(0,.78,-.56); g.add(lamp);
-    const basket=new THREE.Mesh(new THREE.BoxGeometry(.48,.35,.32),mat(0xffffff)); basket.position.set(0,.64,-.62); g.add(basket);
-    const earMat=mat(0xffb5d9);
-    for(const x of [-.13,.13]){const ear=new THREE.Mesh(new THREE.CapsuleGeometry(.075,.24,4,8),earMat);ear.position.set(x,.94,-.65);ear.rotation.z=x<0?-.16:.16;g.add(ear);}
-    const tail=new THREE.Mesh(new THREE.SphereGeometry(.13,10,10),mat(0xffffff));tail.position.set(0,.52,.55);g.add(tail);
-    g.add(makeWheel(.24,.09));g.children[g.children.length-1].position.set(0,.25,-.48);
-    g.add(makeWheel(.24,.09));g.children[g.children.length-1].position.set(0,.25,.48);
+    // Nurin's rabbit scooter: rounded white body, candy-pink panels and a visible rear silhouette.
+    const white=mat(0xfffbff), pink=mat(0xff4fa5), palePink=mat(0xffb7d8);
+    const dark=mat(0x263052), chrome=mat(0xeaf7ff), gold=mat(0xffdf53);
+    // Low step-through chassis and broad rounded fairings.
+    const deck=new THREE.Mesh(new THREE.BoxGeometry(.66,.17,1.05),pink);
+    deck.position.set(0,.38,.05); g.add(deck);
+    const lowerBody=new THREE.Mesh(new THREE.SphereGeometry(1,20,16),white);
+    lowerBody.position.set(0,.56,-.17); lowerBody.scale.set(.36,.31,.53); g.add(lowerBody);
+    const frontCowl=new THREE.Mesh(new THREE.SphereGeometry(1,20,16),white);
+    frontCowl.position.set(0,.72,-.53); frontCowl.scale.set(.32,.31,.27); g.add(frontCowl);
+    // Pink side cheeks and trim make the silhouette readable from the rear camera.
+    for(const side of [-1,1]){
+      const cheek=new THREE.Mesh(new THREE.SphereGeometry(1,14,12),pink);
+      cheek.position.set(side*.285,.49,-.15); cheek.scale.set(.10,.18,.38); g.add(cheek);
+      const trim=new THREE.Mesh(new THREE.BoxGeometry(.035,.12,.52),palePink);
+      trim.position.set(side*.337,.42,.02); g.add(trim);
+    }
+    // Seat sits between the rider's legs.
+    const seat=new THREE.Mesh(new THREE.SphereGeometry(1,16,12),dark);
+    seat.position.set(0,.72,.32); seat.scale.set(.245,.12,.36); g.add(seat);
+    // Rear wheel, pink mudguard, white tail panel and a bright tail lamp are visible from behind.
+    const rearWheel=makeWheel(.235,.095,0x20233a);
+    rearWheel.position.set(0,.245,.53); g.add(rearWheel);
+    const rearFender=new THREE.Mesh(new THREE.SphereGeometry(1,16,12),pink);
+    rearFender.position.set(0,.40,.51); rearFender.scale.set(.25,.13,.22); g.add(rearFender);
+    const tailPanel=new THREE.Mesh(new THREE.SphereGeometry(1,16,12),white);
+    tailPanel.position.set(0,.53,.585); tailPanel.scale.set(.19,.13,.085); g.add(tailPanel);
+    const tailLamp=new THREE.Mesh(new THREE.SphereGeometry(1,12,10),pink);
+    tailLamp.position.set(0,.55,.66); tailLamp.scale.set(.105,.065,.035); g.add(tailLamp);
+    // Front fork and handlebars.
+    const fork=new THREE.Mesh(new THREE.CylinderGeometry(.065,.075,.53,12),chrome);
+    fork.position.set(0,.72,-.49); fork.rotation.x=-.12; g.add(fork);
+    const handle=new THREE.Mesh(new THREE.CylinderGeometry(.045,.045,.58,10),dark);
+    handle.position.set(0,1.00,-.48); handle.rotation.z=Math.PI/2; g.add(handle);
+    for(const side of [-1,1]){
+      const grip=new THREE.Mesh(new THREE.CylinderGeometry(.055,.055,.14,10),pink);
+      grip.position.set(side*.31,1.00,-.48); grip.rotation.z=Math.PI/2; g.add(grip);
+    }
+    // Rabbit ears rise above the front cowl and peek around the rider's silhouette.
+    for(const side of [-1,1]){
+      const ear=new THREE.Mesh(new THREE.CapsuleGeometry(.085,.31,5,10),white);
+      ear.position.set(side*.19,1.14,-.57); ear.rotation.z=side*.13; g.add(ear);
+      const inner=new THREE.Mesh(new THREE.CapsuleGeometry(.038,.235,4,8),palePink);
+      inner.position.set(side*.19,1.145,-.495); inner.rotation.z=side*.13; g.add(inner);
+    }
+    // Small bunny face badge on the front of the scooter (toward -Z).
+    const facePlate=new THREE.Mesh(new THREE.SphereGeometry(1,16,12),white);
+    facePlate.position.set(0,.69,-.785); facePlate.scale.set(.19,.16,.045); g.add(facePlate);
+    for(const side of [-1,1]){
+      const eye=new THREE.Mesh(new THREE.SphereGeometry(.022,8,6),dark);
+      eye.position.set(side*.065,.71,-.831); g.add(eye);
+      const blush=new THREE.Mesh(new THREE.SphereGeometry(.032,8,6),palePink);
+      blush.position.set(side*.11,.66,-.831); g.add(blush);
+    }
+    const nose=new THREE.Mesh(new THREE.SphereGeometry(.026,8,6),pink);
+    nose.position.set(0,.675,-.836); g.add(nose);
+    // Front wheel and small yellow reflectors.
+    const frontWheel=makeWheel(.235,.095,0x20233a);
+    frontWheel.position.set(0,.245,-.59); g.add(frontWheel);
+    for(const side of [-1,1]){
+      const reflector=new THREE.Mesh(new THREE.SphereGeometry(.045,8,6),gold);
+      reflector.position.set(side*.29,.52,.17); g.add(reflector);
+    }
   } else if(vehicle==='motorsport'){
     // Blue sport motorcycle
     const body=new THREE.Mesh(new THREE.CapsuleGeometry(.23,.66,5,10),mat(0x078eff)); body.rotation.x=Math.PI/2; body.position.set(0,.58,0); body.scale.set(1,.75,1);g.add(body);
@@ -256,13 +308,14 @@ function init3D(){
     player3d.add(grp); return grp;
   }
   legL=makeLeg(-.26); legR=makeLeg(.26);
-  // Vehicle front points toward the camera, matching the reference screenshot.
+  // Keep the vehicle aligned with the rider's forward travel direction (-Z).
   rideWheels.length=0;
   rideGroup=makeRide(me.vehicle);
   // Vehicle front already points toward -Z; do not rotate it toward the camera.
   player3d.add(rideGroup);
   scene.add(player3d);
 
+  campusSign=makeCampusSign();
   THREEok=true;
   window.addEventListener('resize',()=>{ if(!$('#screen-game').hidden) resize3D(); });
 }
@@ -276,21 +329,54 @@ function applyZone(Z){ scene.background=new THREE.Color(Z.bg); scene.fog=new THR
 function clearItems(){ for(const o of items) scene.remove(o.mesh); items=[]; }
 
 function makeCoin(){ const g=new THREE.Group();
-  const coin=new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.5,0.12,20), new THREE.MeshLambertMaterial({color:0xffd23f,emissive:0x7a5c00,emissiveIntensity:.3}));
-  coin.rotation.x=Math.PI/2; g.add(coin); return g; }
-function makeObstacle(typ,Z){ const g=new THREE.Group();
-  if(typ===0){ // cute round office chair
-    const seat=new THREE.Mesh(new THREE.CylinderGeometry(0.6,0.6,0.26,18),new THREE.MeshLambertMaterial({color:0x6678a8})); seat.position.y=0.95; g.add(seat);
-    const back=new THREE.Mesh(new THREE.CapsuleGeometry(0.46,0.5,6,12),new THREE.MeshLambertMaterial({color:0x4a5a8c})); back.position.set(0,1.5,-0.42); back.scale.set(1,1,0.42); g.add(back);
-    const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.1,0.7,10),new THREE.MeshLambertMaterial({color:0xaab0bd})); pole.position.y=0.5; g.add(pole); }
-  else if(typ===1){ // water cooler
-    const b=new THREE.Mesh(new THREE.CylinderGeometry(0.58,0.52,1.25,20),new THREE.MeshLambertMaterial({color:0x56c7e8})); b.position.y=0.63; g.add(b);
-    const cap=new THREE.Mesh(new THREE.SphereGeometry(0.5,16,16),new THREE.MeshLambertMaterial({color:0xcff3ff,transparent:true,opacity:.9})); cap.position.y=1.45; cap.scale.set(1,0.85,1); g.add(cap); }
-  else { // round table
-    const top=new THREE.Mesh(new THREE.CylinderGeometry(1.0,1.0,0.22,24),new THREE.MeshLambertMaterial({color:Z.accent})); top.position.y=1.05; g.add(top);
-    const leg=new THREE.Mesh(new THREE.CylinderGeometry(0.16,0.2,1.0,12),new THREE.MeshLambertMaterial({color:0xa06a34})); leg.position.y=0.5; g.add(leg);
-    const base=new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.5,0.12,16),new THREE.MeshLambertMaterial({color:0xa06a34})); base.position.y=0.06; g.add(base); }
-  return g; }
+  const gold=new THREE.MeshLambertMaterial({color:0xffc928,emissive:0x8b5700,emissiveIntensity:.32});
+  const rim=new THREE.Mesh(new THREE.TorusGeometry(.43,.075,8,24),new THREE.MeshLambertMaterial({color:0xfff1a1}));
+  rim.position.z=.02;g.add(rim);
+  const coin=new THREE.Mesh(new THREE.CylinderGeometry(.42,.42,.14,24),gold);
+  coin.rotation.x=Math.PI/2;g.add(coin);
+  const starShape=new THREE.Shape();starShape.moveTo(0,.23);
+  for(let i=1;i<10;i++){const a=Math.PI/2+i*Math.PI/5;const r=i%2?.10:.23;starShape.lineTo(Math.cos(a)*r,Math.sin(a)*r);}
+  starShape.closePath();
+  const star=new THREE.Mesh(new THREE.ShapeGeometry(starShape),new THREE.MeshBasicMaterial({color:0xfff18a,side:THREE.DoubleSide}));
+  star.position.z=.09;g.add(star); return g; }
+function makeObstacle(typ,Z){
+  const g=new THREE.Group();
+  const mat=(color,extra={})=>new THREE.MeshLambertMaterial({color,...extra});
+  if(typ===0){
+    // Rolling office chair — one of the key props in the reference.
+    const seat=new THREE.Mesh(new THREE.BoxGeometry(.92,.18,.82),mat(0x303747)); seat.position.set(0,.92,.02); g.add(seat);
+    const back=new THREE.Mesh(new THREE.BoxGeometry(.84,.88,.18),mat(0x252d3b)); back.position.set(0,1.42,-.34); g.add(back);
+    const cushion=new THREE.Mesh(new THREE.BoxGeometry(.7,.09,.64),mat(0x475165)); cushion.position.set(0,1.04,.02); g.add(cushion);
+    const stem=new THREE.Mesh(new THREE.CylinderGeometry(.07,.09,.56,10),mat(0xa8b4c8)); stem.position.y=.58; g.add(stem);
+    const base=new THREE.Mesh(new THREE.CylinderGeometry(.4,.4,.08,12),mat(0x252d3b)); base.position.y=.27; g.add(base);
+    for(let i=0;i<5;i++){const a=i*Math.PI*2/5;const arm=new THREE.Mesh(new THREE.BoxGeometry(.38,.06,.07),mat(0x252d3b));arm.position.set(Math.cos(a)*.3,.27,Math.sin(a)*.3);arm.rotation.y=-a;g.add(arm);}
+  } else if(typ===1){
+    // Stacked cardboard delivery boxes.
+    const boxColors=[0xc88a4b,0xd9a064,0xb8793f];
+    const sizes=[[.92,.78,.8],[.58,.55,.58],[.36,.34,.4]];
+    sizes.slice(0,Math.random()<.5?2:3).forEach((s,i)=>{
+      const b=new THREE.Mesh(new THREE.BoxGeometry(...s),mat(boxColors[i]));
+      b.position.set((i%2?-.14:.12),s[1]/2+(i===0?0:.72),i===0?.02:-.04);g.add(b);
+      const tape=new THREE.Mesh(new THREE.BoxGeometry(.09,s[1]+.01,s[2]+.02),mat(0xf6d79a));
+      tape.position.set(b.position.x,b.position.y,b.position.z);g.add(tape);
+    });
+  } else if(typ===2){
+    // Bright orange-and-white traffic cone.
+    const base=new THREE.Mesh(new THREE.CylinderGeometry(.43,.48,.12,16),mat(0xff6b22));base.position.y=.06;g.add(base);
+    const cone=new THREE.Mesh(new THREE.CylinderGeometry(.06,.34,.88,16),mat(0xff6b22));cone.position.y=.54;g.add(cone);
+    const stripe=new THREE.Mesh(new THREE.CylinderGeometry(.19,.25,.16,16),mat(0xffffff));stripe.position.y=.53;g.add(stripe);
+    const top=new THREE.Mesh(new THREE.SphereGeometry(.065,10,8),mat(0xffffff));top.position.y=1.0;g.add(top);
+  } else {
+    // A neat stack of paper / files from the office.
+    for(let i=0;i<5;i++){
+      const sheet=new THREE.Mesh(new THREE.BoxGeometry(.86,.09,.66),mat(i%2?0xf7f3e8:0xffffff));
+      sheet.position.set((i%2)*.035,.13+i*.105,(i%2)*-.025);g.add(sheet);
+    }
+    const file=new THREE.Mesh(new THREE.BoxGeometry(.7,.22,.54),mat(0x36a9ed));file.position.set(.02,.78,.01);g.add(file);
+    const label=new THREE.Mesh(new THREE.BoxGeometry(.34,.1,.02),mat(0xffe45c));label.position.set(.02,.8,-.265);g.add(label);
+  }
+  return g;
+}
 function makeSecret(){ const g=new THREE.Group();
   const box=new THREE.Mesh(new THREE.BoxGeometry(1.1,1.0,1.1), new THREE.MeshLambertMaterial({color:0xff5c8a,emissive:0xff2e97,emissiveIntensity:.45})); box.position.y=1.05; g.add(box);
   const ribV=new THREE.Mesh(new THREE.BoxGeometry(0.24,1.02,1.12),new THREE.MeshLambertMaterial({color:0xffd23f})); ribV.position.y=1.05; g.add(ribV);
@@ -333,9 +419,29 @@ function placeScene(side,z,Z){ const isTree=Math.random()<0.12; const m=isTree?m
 function clearScenery(){ for(const s of scenery) scene.remove(s.mesh); scenery=[]; }
 function spawnSceneRow(){ const Z=ZONES[zoneOf(travel)]; for(const side of [-1,1]) placeScene(side,SPAWN_Z,Z); }
 
+function makeCampusSign(){
+  const g=new THREE.Group();
+  const blue=new THREE.MeshLambertMaterial({color:0x087bf4});
+  const white=new THREE.MeshLambertMaterial({color:0xffffff});
+  const gold=new THREE.MeshLambertMaterial({color:0xffdf42});
+  const postGeo=new THREE.BoxGeometry(.22,4.1,.22);
+  for(const x of [-5.2,5.2]){const p=new THREE.Mesh(postGeo,white);p.position.set(x,2.05,-88);g.add(p);}
+  const board=new THREE.Mesh(new THREE.BoxGeometry(10.8,1.05,.34),blue);board.position.set(0,4.0,-88);g.add(board);
+  const trim=new THREE.Mesh(new THREE.BoxGeometry(10.95,.13,.39),gold);trim.position.set(0,4.55,-88);g.add(trim);
+  // Tiny decorative blocks stand in for lettering while remaining crisp at distance.
+  for(let i=0;i<18;i++){const w=new THREE.Mesh(new THREE.BoxGeometry(.22,.08,.025),white);w.position.set(-3.55+i*.42,4.08,-87.81);g.add(w);}
+  scene.add(g);return g;
+}
+
+let paused=false;
+function togglePause(){
+  if(!running && !paused) return;
+  if(paused){ paused=false; running=true; clock.start(); loop(); const b=$('#hud-pause'); if(b)b.textContent='Ⅱ'; }
+  else { paused=true; running=false; cancelAnimationFrame(raf); const b=$('#hud-pause'); if(b)b.textContent='▶'; }
+}
 function startGame(){
   showScreen('screen-game'); if(!THREEok) init3D(); resize3D();
-  clearItems(); clearScenery(); travel=0; speed=18; nextSpawn=14; nextScene=6; coinLane=1; coinScore=0; secretArmed=true; caughtSecret=null;
+  paused=false; const pauseBtn=$('#hud-pause'); if(pauseBtn)pauseBtn.textContent='Ⅱ'; clearItems(); clearScenery(); travel=0; speed=18; nextSpawn=0; nextScene=6; coinLane=1; coinScore=0; secretArmed=true; caughtSecret=null;
   for(let z=-5; z>SPAWN_Z; z-=6){ for(const side of [-1,1]) placeScene(side,z,ZONES[0]); }  // prefill both sides, dense
   pLane=1; pLaneF=1; jumpY=0; jumpVy=0; animT=0; zoneIdx=0; prevZone=-1;
   applyZone(ZONES[0]); player3d.position.set(0,0,0);
@@ -345,7 +451,7 @@ function startGame(){
 
 function spawnRow(){
   const z=zoneIdx; let obsLane=-1;
-  if(Math.random()<0.45+z*0.12){ obsLane=(Math.random()*3)|0; const typ=(Math.random()*3)|0;
+  if(Math.random()<0.68+z*0.08){ obsLane=(Math.random()*3)|0; const typ=(Math.random()*4)|0;
     const m=makeObstacle(typ,ZONES[z]); items.push({mesh:m,kind:'obs',lane:obsLane,z:SPAWN_Z,done:false}); scene.add(m); }
   if(Math.random()<0.85){ if(Math.random()<0.4||coinLane===obsLane){ const free=[0,1,2].filter(l=>l!==obsLane); coinLane=free[(Math.random()*free.length)|0]; }
     for(let k=0;k<3;k++){ const m=makeCoin(); items.push({mesh:m,kind:'coin',lane:coinLane,z:SPAWN_Z-k*4,done:false,spin:0}); scene.add(m); } }
@@ -457,6 +563,7 @@ function buildCharSelect(){ const g=$('#char-grid'); g.innerHTML=''; const owner
       <div class="char-name">${c.id}</div><div class="char-count">${locked?'Not you':('📸 '+v+' photos')}</div>`;
     if(locked) card.disabled=true; else card.addEventListener('click',()=>{ ac(); me=c; startGame(); }); g.appendChild(card); });
 }
+const pauseBtn=$('#hud-pause'); if(pauseBtn)pauseBtn.addEventListener('click',togglePause);
 $('#hud-gallery').addEventListener('click',()=>{ running=false; cancelAnimationFrame(raf); buildGallery(me.id); showScreen('screen-gallery'); });
 $('#win-again').addEventListener('click',()=>startGame());
 $('#win-gallery').addEventListener('click',()=>{ buildGallery(me.id); showScreen('screen-gallery'); });
