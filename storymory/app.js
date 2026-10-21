@@ -364,17 +364,17 @@ function endRun(result){
   const total=getColl(me.id).size;
 
   if(result==='secret'){ sSecret(); confetti(true);
-    $('#win-emoji').textContent='🎁'; $('#win-title').textContent='RAHSIA DIJUMPAI!';
+    $('#win-emoji').textContent='🎁'; $('#win-title').textContent='SECRET FOUND!';
     const cap=secret.item.caption?` — "${secret.item.caption}"`:'';
-    $('#win-sub').textContent=`Gambar baru masuk koleksi ${me.id}${cap} 🎉  ·  coin: ${coinScore}  ·  jumlah gambar: ${total}`;
+    $('#win-sub').textContent=`New photo added to ${me.id}'s collection${cap} 🎉  ·  coins: ${coinScore}  ·  photos: ${total}`;
   } else if(result==='win'){ sUp();
     const left=POOL.some(p=>!getColl(me.id).has(p.id));
     $('#win-emoji').textContent = left?'🏁':'🏆';
-    $('#win-title').textContent = left?'Habis! Tapi rahsia tak jumpa' : 'Dah kumpul SEMUA gambar!';
-    $('#win-sub').textContent = `coin: ${coinScore}  ·  jumlah gambar ${me.id}: ${total}`;
+    $('#win-title').textContent = left?'Finished! But no secret found' : 'All photos collected!';
+    $('#win-sub').textContent = `coins: ${coinScore}  ·  ${me.id}'s photos: ${total}`;
   } else { sOver();
-    $('#win-emoji').textContent='💥'; $('#win-title').textContent='Kena duri! Tamat.';
-    $('#win-sub').textContent = `coin: ${coinScore}  ·  jumlah gambar ${me.id}: ${total}`;
+    $('#win-emoji').textContent='💥'; $('#win-title').textContent='Hit a spike! Game over';
+    $('#win-sub').textContent = `coins: ${coinScore}  ·  ${me.id}'s photos: ${total}`;
   }
   loadScores().then(()=>buildBoard('#win-board'));
   showScreen('screen-win');
@@ -416,7 +416,7 @@ function buildCharSelect(){ const g=$('#char-grid'); g.innerHTML='';
     const card=document.createElement('button'); card.className='char-card'+(locked?' locked':'');
     card.innerHTML=`<div class="char-ava" style="background:${c.color}">${locked?'🔒':c.emoji}</div>
       <div class="char-name">${c.id} ${veh[c.vehicle]}</div>
-      <div class="char-count">${locked?'Bukan awak':('📸 '+v+' gambar')}</div>`;
+      <div class="char-count">${locked?'Not you':('📸 '+v+' photos')}</div>`;
     if(locked){ card.disabled=true; }
     else card.addEventListener('click',()=>{ ac(); me=c; if(!owner) setOwner(c.id); startGame(); });
     g.appendChild(card); });
@@ -431,14 +431,15 @@ document.addEventListener('keydown',e=>{ if(e.key==='ArrowLeft')keys.left=true; 
 document.addEventListener('keyup',e=>{ if(e.key==='ArrowLeft')keys.left=false; if(e.key==='ArrowRight')keys.right=false; });
 
 /* ---- nav ---- */
-$('#to-select').addEventListener('click',()=>{ ac(); buildCharSelect(); showScreen('screen-select'); });
-$('#to-gallery-1').addEventListener('click',()=>{ const o=getOwner(); me=me||(o?CHARS.find(c=>c.id===o):CHARS[0]); buildGallery(me.id); showScreen('screen-gallery'); });
-$('#back-title').addEventListener('click',()=>showScreen('screen-title'));
-$('#hud-exit').addEventListener('click',()=>{ running=false; cancelAnimationFrame(raf); showScreen('screen-title'); });
+$('#hud-gallery').addEventListener('click',()=>{ running=false; cancelAnimationFrame(raf); buildGallery(me.id); showScreen('screen-gallery'); });
 $('#win-again').addEventListener('click',()=>startGame());
 $('#win-gallery').addEventListener('click',()=>{ buildGallery(me.id); showScreen('screen-gallery'); });
-$('#gal-back').addEventListener('click',()=>showScreen('screen-title'));
+$('#gal-back').addEventListener('click',()=>{ if(me) startGame(); else { buildCharSelect(); showScreen('screen-select'); } });
 
-/* ---- boot ---- */
+/* ---- boot: link (?me=Name) decides the character → straight into the game ---- */
 loadScores();
-showScreen('screen-title');
+(function boot(){
+  const owner=getOwner();
+  if(owner){ me=CHARS.find(c=>c.id===owner); startGame(); }
+  else { buildCharSelect(); showScreen('screen-select'); }   // fallback if link has no ?me=
+})();
