@@ -209,3 +209,21 @@ button{font:inherit}
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}
 }
+
+
+/* EXTRA ARCADE POLISH — chunky stickers, pickup feedback and safer mobile HUD */
+.ride-label{display:inline-block;margin-top:2px;padding:3px 7px;border:1.5px solid #fff;border-radius:999px;background:#071b50aa;color:#fff;font:900 .68rem 'Nunito',sans-serif;text-shadow:1px 1px #071b50}
+.hud-char,.hud-stage,.hud-score,.hud-btn{backdrop-filter:blur(3px)}
+.hud-score{white-space:nowrap}
+.char-card{isolation:isolate}
+.char-card:after{content:"✦";position:absolute;right:10px;top:7px;color:#fff;font-size:1.25rem;text-shadow:1px 2px #09265f;pointer-events:none}
+.char-card:nth-child(2):after{content:"⚡"}
+.char-card:nth-child(3):after{content:"★"}
+.game-sticker{animation:stickerWiggle 2.8s ease-in-out infinite}
+@keyframes stickerWiggle{0%,100%{rotate:5deg;translate:0 0}50%{rotate:1deg;translate:0 -4px}}
+.reveal-media img{border-radius:8px}
+.board-row,.char-card,.btn,.ctl,.hud-btn{ -webkit-tap-highlight-color:transparent }
+@media(max-width:650px){
+ .game-sticker{max-width:110px;text-align:center}
+ .ride-label{font-size:.62rem}
+}
