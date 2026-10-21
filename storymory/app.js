@@ -62,10 +62,10 @@ const sOver=()=>{[400,300,200].forEach((f,i)=>setTimeout(()=>beep(f,f*0.8,'sawto
    3D OFFICE RUNNER (Three.js)
    =========================================================================== */
 const ZONES=[
-  {id:'entrance',    name:'KOLEJ KOMUNITI TEMERLOH', bg:0x9fc4f0, fog:0xcfe3f7, floor:0xdce6f5, lane:0xbcd0ec, accent:0xffd23f,
-    ground:0xbfe3a8, blds:[0xeaf1ff,0xbcd0ec,0x9fc4f0,0xffffff,0xd7e8ff]},
-  {id:'pengambilan', name:'Bilik Pengambilan',       bg:0xffd4b4, fog:0xffe2cf, floor:0xffe9cf, lane:0xffd0b0, accent:0xff5c8a,
-    ground:0xf3d7bd, blds:[0xffc9a0,0xffb3c9,0xffe0b0,0xffd4e0,0xffe8cf]},
+  {id:'entrance',    name:'KOLEJ KOMUNITI TEMERLOH', bg:0x4fb8ef, fog:0x8fd3f5, floor:0xcdd8e8, lane:0xaebdd4, accent:0xffd23f,
+    ground:0x7bc96a, blds:[0xff5c5c,0xffa23a,0x2ec4ff,0x4ec96a,0xffd23f,0xb57bff,0xff7ab8]},
+  {id:'pengambilan', name:'Bilik Pengambilan',       bg:0xff9a6b, fog:0xffbd96, floor:0xffe0c4, lane:0xffc49a, accent:0xff2e97,
+    ground:0xe88a4a, blds:[0xff2e6a,0xff7a1f,0xffc21f,0xff5c8a,0xc44bff,0x2ec4ff,0x3ad16a]},
 ];
 const ZONE_LEN=230, LANE=2.2, SPAWN_Z=-130;
 
@@ -175,32 +175,34 @@ function makeProp(side,Z){ const g=new THREE.Group(); const t=Math.floor(Math.ra
 
 /* ---- side scenery: cute buildings + trees ---- */
 function makeBuilding(side,Z){ const g=new THREE.Group();
-  const w=2.2+Math.random()*2.0, h=3+Math.random()*5.5, d=2.2+Math.random()*1.8;
+  const w=2.6+Math.random()*2.2, h=6+Math.random()*8, d=3.0+Math.random()*2.5;   // tall city blocks
   const col=Z.blds[(Math.random()*Z.blds.length)|0];
   const body=new THREE.Mesh(new THREE.BoxGeometry(w,h,d), new THREE.MeshLambertMaterial({color:col})); body.position.y=h/2; g.add(body);
-  // pitched roof
-  const roof=new THREE.Mesh(new THREE.ConeGeometry(w*0.82,1.5,4), new THREE.MeshLambertMaterial({color:Z.accent})); roof.position.y=h+0.7; roof.rotation.y=Math.PI/4; g.add(roof);
-  // lit windows on the face toward the lane
-  const winMat=new THREE.MeshLambertMaterial({color:0xfff3b0,emissive:0xffe066,emissiveIntensity:.5});
-  const faceX=-side*(w/2+0.02); const rows=Math.max(1,Math.floor(h/1.4)), cols=Math.max(1,Math.floor(w/1.1));
-  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){ const win=new THREE.Mesh(new THREE.BoxGeometry(0.06,0.55,0.45), winMat);
-    win.position.set(faceX, 1.0+r*1.4, (c-(cols-1)/2)*1.0); g.add(win); }
+  // flat-roof trim band + rooftop block (urban look)
+  const trim=new THREE.Mesh(new THREE.BoxGeometry(w+0.12,0.5,d+0.12), new THREE.MeshLambertMaterial({color:0xffffff})); trim.position.y=h-0.25; g.add(trim);
+  const cap=new THREE.Mesh(new THREE.BoxGeometry(w*0.5,0.6,d*0.5), new THREE.MeshLambertMaterial({color:0x3a4356})); cap.position.y=h+0.3; g.add(cap);
+  // bright lit windows on the face toward the lane
+  const faceX=-side*(w/2+0.03); const rows=Math.max(2,Math.floor(h/1.5)), cols=Math.max(1,Math.floor(w/1.0));
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){ const lit=Math.random()<0.75;
+    const winMat=new THREE.MeshLambertMaterial({color:lit?0xfff3b0:0x5a6b86, emissive:lit?0xffdf4d:0x000000, emissiveIntensity:lit?.7:0});
+    const win=new THREE.Mesh(new THREE.BoxGeometry(0.08,0.6,0.5), winMat);
+    win.position.set(faceX, 1.2+r*1.5, (c-(cols-1)/2)*1.05); g.add(win); }
   return g; }
 function makeTree(){ const g=new THREE.Group();
   const tr=new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.28,1.2,10), new THREE.MeshLambertMaterial({color:0x9c6b3f})); tr.position.y=0.6; g.add(tr);
   const gr=[0x6fcf6f,0x57c96a,0x8bdc7a]; const top=gr[(Math.random()*gr.length)|0];
   for(const o of [[0,1.9,0,1.0],[-0.5,1.6,0.2,0.7],[0.5,1.65,-0.2,0.72]]){ const f=new THREE.Mesh(new THREE.SphereGeometry(o[3],12,12), new THREE.MeshLambertMaterial({color:top})); f.position.set(o[0],o[1],o[2]); g.add(f); }
   return g; }
-function placeScene(side,z,Z){ const isTree=Math.random()<0.28; const m=isTree?makeTree():makeBuilding(side,Z);
-  const x=side*(6.3+Math.random()*2.6); m.position.set(x,0,z); m.rotation.y=(Math.random()-0.5)*0.4;
+function placeScene(side,z,Z){ const isTree=Math.random()<0.12; const m=isTree?makeTree():makeBuilding(side,Z);
+  const x=side*(4.9+Math.random()*1.3); m.position.set(x,0,z);     // rapat ke tepi lorong
   scene.add(m); scenery.push({mesh:m,x,z}); }
 function clearScenery(){ for(const s of scenery) scene.remove(s.mesh); scenery=[]; }
-function spawnSceneRow(){ const Z=ZONES[zoneOf(travel)]; for(const side of [-1,1]) if(Math.random()<0.9) placeScene(side,SPAWN_Z,Z); }
+function spawnSceneRow(){ const Z=ZONES[zoneOf(travel)]; for(const side of [-1,1]) placeScene(side,SPAWN_Z,Z); }
 
 function startGame(){
   showScreen('screen-game'); if(!THREEok) init3D(); resize3D();
-  clearItems(); clearScenery(); travel=0; speed=18; nextSpawn=14; nextScene=9; coinLane=1; coinScore=0; secretArmed=true; caughtSecret=null;
-  for(let z=-8; z>SPAWN_Z; z-=9){ for(const side of [-1,1]) if(Math.random()<0.9) placeScene(side,z,ZONES[0]); }  // prefill both sides
+  clearItems(); clearScenery(); travel=0; speed=18; nextSpawn=14; nextScene=6; coinLane=1; coinScore=0; secretArmed=true; caughtSecret=null;
+  for(let z=-5; z>SPAWN_Z; z-=6){ for(const side of [-1,1]) placeScene(side,z,ZONES[0]); }  // prefill both sides, dense
   pLane=1; pLaneF=1; jumpY=0; jumpVy=0; animT=0; zoneIdx=0; prevZone=-1;
   applyZone(ZONES[0]); player3d.position.set(0,0,0);
   $('#hud-char').textContent=me.id; $('#hud-score').textContent=0; $('#hud-stage').textContent=ZONES[0].name;
@@ -237,7 +239,7 @@ function update(dt){
   camera.position.x += (laneX(pLaneF)*0.35 - camera.position.x)*Math.min(1,dt*6);
 
   // side scenery scroll + spawn + recycle
-  while(travel>nextScene){ spawnSceneRow(); nextScene+=9; }
+  while(travel>nextScene){ spawnSceneRow(); nextScene+=6; }
   for(const s of scenery){ s.z+=speed*dt; s.mesh.position.z=s.z; }
   scenery=scenery.filter(s=>{ if(s.z>16){ scene.remove(s.mesh); return false; } return true; });
 
