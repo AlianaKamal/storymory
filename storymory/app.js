@@ -149,12 +149,12 @@ function makeRide(vehicle){
     }
     // Bunny ears are positioned on the side silhouette, visible from behind the rider.
     for(const side of [-1,1]){
-      const ear=new THREE.Mesh(new THREE.CapsuleGeometry(.078,.27,5,10),white);
-      ear.position.set(side*.365,.99,.02); ear.rotation.z=side*.12; g.add(ear);
-      const inner=new THREE.Mesh(new THREE.CapsuleGeometry(.034,.20,4,8),palePink);
-      inner.position.set(side*.365,1.00,.105); inner.rotation.z=side*.12; g.add(inner);
+      const ear=new THREE.Mesh(new THREE.CapsuleGeometry(.09,.34,5,12),white);
+      ear.position.set(side*.37,1.02,.31); ear.rotation.z=side*.10; g.add(ear);
+      const inner=new THREE.Mesh(new THREE.CapsuleGeometry(.043,.255,4,10),palePink);
+      inner.position.set(side*.37,1.03,.405); inner.rotation.z=side*.10; g.add(inner);
       const earBase=new THREE.Mesh(new THREE.SphereGeometry(.105,12,10),white);
-      earBase.position.set(side*.34,.79,.06); g.add(earBase);
+      earBase.position.set(side*.34,.80,.30); g.add(earBase);
     }
     // Small bunny face badge on the front of the scooter (toward -Z).
     const facePlate=new THREE.Mesh(new THREE.SphereGeometry(1,16,12),white);
@@ -249,27 +249,30 @@ function init3D(){
     const hijabMat=new THREE.MeshLambertMaterial({color:0x4a2b26});
     // Smooth full hood silhouette: from the trailing camera it reads as a hijab,
     // not exposed hair. The face details are on the forward side of the head.
-    const hoodBack=new THREE.Mesh(
-      new THREE.SphereGeometry(.505,28,24),
-      hijabMat
-    );
-    hoodBack.position.set(0,1.66,.115);
-    hoodBack.scale.set(1.02,1.04,1.0);
+    const hoodBack=new THREE.Mesh(new THREE.SphereGeometry(.505,28,24),hijabMat);
+    hoodBack.position.set(0,1.67,.115);
+    hoodBack.scale.set(1.00,1.04,.86);
     player3d.add(hoodBack);
-    // Side folds and a wider shoulder drape create the recognisable hijab outline.
+    // Side panels frame the cheeks and continue down over the shoulders.
     for(const side of [-1,1]){
-      const fold=new THREE.Mesh(new THREE.SphereGeometry(1,16,14),hijabMat);
-      fold.position.set(side*.345,1.47,.12);
-      fold.scale.set(.18,.39,.32);
+      const fold=new THREE.Mesh(new THREE.SphereGeometry(1,18,14),hijabMat);
+      fold.position.set(side*.335,1.45,.15);
+      fold.scale.set(.205,.43,.31);
       player3d.add(fold);
     }
-    const drape=new THREE.Mesh(new THREE.SphereGeometry(1,22,18),hijabMat);
-    drape.position.set(0,1.20,.16);
-    drape.scale.set(.445,.48,.34);
+    // Broad rounded triangular drape: this gives the rear silhouette a scarf/khimar shape.
+    const drape=new THREE.Mesh(new THREE.ConeGeometry(.49,.72,24,1,false),hijabMat);
+    drape.position.set(0,1.17,.20);
+    drape.scale.set(1.12,1.0,.72);
+    drape.rotation.x=Math.PI;
     player3d.add(drape);
-    // A fine seam on the rear lower edge, kept subtle so it does not look like hair.
-    const seam=new THREE.Mesh(new THREE.TorusGeometry(.255,.009,6,28,Math.PI),new THREE.MeshLambertMaterial({color:0x68413a}));
-    seam.position.set(0,1.38,.445); seam.rotation.x=Math.PI/2; player3d.add(seam);
+    const shoulderDrape=new THREE.Mesh(new THREE.SphereGeometry(1,22,16),hijabMat);
+    shoulderDrape.position.set(0,1.18,.19);
+    shoulderDrape.scale.set(.48,.25,.31);
+    player3d.add(shoulderDrape);
+    // Subtle curved seam around the lower back edge of the scarf.
+    const seam=new THREE.Mesh(new THREE.TorusGeometry(.29,.009,6,32,Math.PI),new THREE.MeshLambertMaterial({color:0x70423a}));
+    seam.position.set(0,1.31,.445); seam.rotation.x=Math.PI/2; player3d.add(seam);
   }
   // Eyes, blush and smile are simple geometry so no external art files are needed.
   const eyeMat=new THREE.MeshBasicMaterial({color:0x30233a});
@@ -473,7 +476,7 @@ function spawnRow(){
 function laneX(l){ return (l-1)*LANE; }
 function update(dt){
   zoneIdx=zoneOf(travel);
-  if(zoneIdx!==prevZone){ prevZone=zoneIdx; applyZone(ZONES[zoneIdx]); $('#hud-stage').textContent=ZONES[zoneIdx].name; sSwish(); }
+  if(zoneIdx!==prevZone){ prevZone=zoneIdx; applyZone(ZONES[zoneIdx]); $('#hud-stage').textContent='STAGE '+(zoneIdx+1); sSwish(); }
   speed=18+zoneIdx*5+travel*0.02; if(speed>44)speed=44;
   travel+=speed*dt;
 
@@ -544,6 +547,7 @@ function endRun(result){
   if(result==='secret'&&caughtSecret){ const coll=getColl(me.id); coll.add(caughtSecret.id); saveColl(me.id,coll); const photoCount=$('#hud-photos');if(photoCount)photoCount.textContent=`${coll.size}/${POOL.length}`; }
   pushScore(me.id); const total=getColl(me.id).size;
   const banner=$('.win-confetti-label'), sticker=$('.win-sticker');
+  const winScreen=$('#screen-win'); if(winScreen) winScreen.dataset.result=result;
   if(result==='secret'){
     sSecret(); confetti(true); $('#win-emoji').textContent='🎁'; $('#win-title').textContent='MEMORY UNLOCKED!';
     if(banner)banner.textContent='✦ NEW MEMORY! ✦'; if(sticker)sticker.hidden=false;
