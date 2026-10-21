@@ -71,7 +71,8 @@ const ZONE_LEN=230, LANE=2.2, SPAWN_Z=-130;
 
 let me=null;
 let renderer, scene, camera, clock, THREEok=false;
-let floorMesh, floorTex, groundMesh, player3d, legL, legR;
+let floorMesh, floorTex, groundMesh, player3d, legL, legR, rideGroup;
+const rideWheels=[];
 let items=[];            // {mesh,kind,lane,z,done,item,spin}
 let scenery=[], nextScene;   // side buildings/trees
 let travel, speed, nextSpawn, coinLane, coinScore, zoneIdx, prevZone, running, raf;
@@ -87,6 +88,58 @@ function makeFloorTexture(Z){
   x.strokeStyle='rgba(255,255,255,.7)'; x.lineWidth=4; x.setLineDash([26,26]);
   x.beginPath(); x.moveTo(85.5,0); x.lineTo(85.5,256); x.moveTo(170.5,0); x.lineTo(170.5,256); x.stroke();
   const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(1,40); return t;
+}
+
+
+/* ---- character rides: cute rabbit scooter, sport bike and mini Hilux ---- */
+function makeWheel(radius, width, color=0x20233a){
+  const g=new THREE.Group();
+  const tire=new THREE.Mesh(new THREE.TorusGeometry(radius, width, 10, 18),new THREE.MeshLambertMaterial({color}));
+  tire.rotation.y=Math.PI/2; g.add(tire);
+  const hub=new THREE.Mesh(new THREE.CylinderGeometry(radius*.38,radius*.38,width*2.2,12),new THREE.MeshLambertMaterial({color:0xeaf7ff}));
+  hub.rotation.z=Math.PI/2; g.add(hub);
+  const dot=new THREE.Mesh(new THREE.SphereGeometry(radius*.16,8,8),new THREE.MeshLambertMaterial({color:0xffd83d}));
+  dot.position.x=width*1.2; g.add(dot);
+  rideWheels.push(g);
+  return g;
+}
+function makeRide(vehicle){
+  const g=new THREE.Group();
+  const mat=(color,extra={})=>new THREE.MeshLambertMaterial({color,...extra});
+  if(vehicle==='rabbit'){
+    // Pink bunny scooter
+    const deck=new THREE.Mesh(new THREE.BoxGeometry(.62,.16,1.0),mat(0xff58a7)); deck.position.set(0,.38,.08); g.add(deck);
+    const front=new THREE.Mesh(new THREE.CylinderGeometry(.09,.09,.62,12),mat(0x5b5f80)); front.position.set(0,.67,-.48); front.rotation.x=.15; g.add(front);
+    const handle=new THREE.Mesh(new THREE.CylinderGeometry(.055,.055,.62,10),mat(0x8cddff)); handle.position.set(0,.96,-.52); handle.rotation.z=Math.PI/2; g.add(handle);
+    const lamp=new THREE.Mesh(new THREE.SphereGeometry(.16,12,12),mat(0xfff2a0,{emissive:0xffb500,emissiveIntensity:.3})); lamp.position.set(0,.78,-.56); g.add(lamp);
+    const basket=new THREE.Mesh(new THREE.BoxGeometry(.48,.35,.32),mat(0xffffff)); basket.position.set(0,.64,-.62); g.add(basket);
+    const earMat=mat(0xffb5d9);
+    for(const x of [-.13,.13]){const ear=new THREE.Mesh(new THREE.CapsuleGeometry(.075,.24,4,8),earMat);ear.position.set(x,.94,-.65);ear.rotation.z=x<0?-.16:.16;g.add(ear);}
+    const tail=new THREE.Mesh(new THREE.SphereGeometry(.13,10,10),mat(0xffffff));tail.position.set(0,.52,.55);g.add(tail);
+    g.add(makeWheel(.24,.09));g.children[g.children.length-1].position.set(0,.25,-.48);
+    g.add(makeWheel(.24,.09));g.children[g.children.length-1].position.set(0,.25,.48);
+  } else if(vehicle==='motorsport'){
+    // Blue sport motorcycle
+    const body=new THREE.Mesh(new THREE.CapsuleGeometry(.23,.66,5,10),mat(0x078eff)); body.rotation.x=Math.PI/2; body.position.set(0,.58,0); body.scale.set(1,.75,1);g.add(body);
+    const tank=new THREE.Mesh(new THREE.SphereGeometry(.3,14,12),mat(0x00d9ff));tank.scale.set(.85,.7,1.2);tank.position.set(0,.78,-.08);g.add(tank);
+    const seat=new THREE.Mesh(new THREE.BoxGeometry(.38,.13,.52),mat(0x253050));seat.position.set(0,.83,.34);g.add(seat);
+    const fork=new THREE.Mesh(new THREE.CylinderGeometry(.055,.055,.72,10),mat(0xd7edff));fork.position.set(0,.55,-.62);fork.rotation.x=-.18;g.add(fork);
+    const bar=new THREE.Mesh(new THREE.CylinderGeometry(.045,.045,.65,10),mat(0x273451));bar.position.set(0,1.02,-.57);bar.rotation.z=Math.PI/2;g.add(bar);
+    const exhaust=new THREE.Mesh(new THREE.CylinderGeometry(.07,.09,.56,10),mat(0x9caac2));exhaust.rotation.x=Math.PI/2;exhaust.position.set(.22,.38,.35);g.add(exhaust);
+    g.add(makeWheel(.29,.10));g.children[g.children.length-1].position.set(0,.3,-.68);
+    g.add(makeWheel(.29,.10));g.children[g.children.length-1].position.set(0,.3,.62);
+  } else {
+    // Purple mini Hilux with cabin, windscreen, bumper and chunky wheels
+    const chassis=new THREE.Mesh(new THREE.BoxGeometry(1.12,.3,1.55),mat(0x7d42ed));chassis.position.set(0,.48,.05);g.add(chassis);
+    const cabin=new THREE.Mesh(new THREE.BoxGeometry(.92,.58,.76),mat(0x9e78ff));cabin.position.set(0,.88,-.22);g.add(cabin);
+    const glass=new THREE.Mesh(new THREE.BoxGeometry(.76,.34,.045),mat(0x9beaff,{transparent:true,opacity:.9}));glass.position.set(0,.94,-.615);g.add(glass);
+    const bed=new THREE.Mesh(new THREE.BoxGeometry(.86,.16,.5),mat(0x5a2cb9));bed.position.set(0,.68,.55);g.add(bed);
+    const bumper=new THREE.Mesh(new THREE.BoxGeometry(1.16,.13,.12),mat(0xeaf7ff));bumper.position.set(0,.37,-.78);g.add(bumper);
+    for(const x of [-.35,.35]){const light=new THREE.Mesh(new THREE.BoxGeometry(.18,.13,.06),mat(0xfff17a,{emissive:0xffb800,emissiveIntensity:.4}));light.position.set(x,.55,-.78);g.add(light);}
+    for(const x of [-.57,.57])for(const z of [-.48,.55]){const wheel=makeWheel(.23,.10,0x20233a);wheel.position.set(x,.28,z);g.add(wheel);}
+  }
+  g.position.y=-.03;
+  return g;
 }
 
 function init3D(){
@@ -122,11 +175,13 @@ function init3D(){
   const armR=new THREE.Mesh(new THREE.CapsuleGeometry(0.15,0.38,6,10), armMat); armR.position.set(0.56,1.2,0); armR.rotation.z=-0.35; player3d.add(armR);
   // legs (groups so they swing from the hip, with shoes attached)
   const legMat=new THREE.MeshLambertMaterial({color:0x3c4663}), shoeMat=new THREE.MeshLambertMaterial({color:0xffffff});
-  function makeLeg(x){ const grp=new THREE.Group(); grp.position.set(x,0.8,0);
+  function makeLeg(x){ const grp=new THREE.Group(); grp.position.set(x,0.72,0);
     const calf=new THREE.Mesh(new THREE.CapsuleGeometry(0.17,0.44,6,10), legMat); calf.position.y=-0.3; grp.add(calf);
     const shoe=new THREE.Mesh(new THREE.SphereGeometry(0.2,12,12), shoeMat); shoe.scale.set(1,0.68,1.5); shoe.position.set(0,-0.6,0.14); grp.add(shoe);
     player3d.add(grp); return grp; }
   legL=makeLeg(-0.22); legR=makeLeg(0.22);
+  rideWheels.length=0; rideGroup=makeRide(me.vehicle); player3d.add(rideGroup);
+  legL.position.y=0.67; legR.position.y=0.67;
   scene.add(player3d);
 
   THREEok=true;
@@ -236,6 +291,7 @@ function update(dt){
   if(jumpY>0||jumpVy!==0){ jumpVy-=28*dt; jumpY+=jumpVy*dt; if(jumpY<=0){jumpY=0;jumpVy=0;} }
   player3d.position.y=jumpY;
   animT+=speed*dt*0.25; const lg=Math.sin(animT)*0.5; legL.rotation.x=lg; legR.rotation.x=-lg;
+  rideWheels.forEach(w=>{w.rotation.x+=speed*dt*0.22;});
   camera.position.x += (laneX(pLaneF)*0.35 - camera.position.x)*Math.min(1,dt*6);
 
   // side scenery scroll + spawn + recycle
@@ -300,7 +356,7 @@ function buildBoard(sel){ const el=$(sel); el.innerHTML='';
   const max=Math.max(1,...CHARS.map(c=>scores[c.id]||0)), lead=Math.max(...CHARS.map(c=>scores[c.id]||0));
   CHARS.slice().sort((a,b)=>(scores[b.id]||0)-(scores[a.id]||0)).forEach(c=>{ const v=scores[c.id]||0, src=FACE_SRC[c.id];
     const row=document.createElement('div'); row.className='board-row'+(v===lead&&v>0?' lead':'');
-    row.innerHTML=`<div class="board-ava" style="background:${hexCss(c.color)}">${src?`<img src="${src}" alt="">`:''}</div>
+    row.innerHTML=`<div class="board-ava" style="background:${hexCss(c.color)}">${src?`<img src="${src}" alt="" onerror="this.remove();this.parentElement.textContent='${c.id==='Nurin'?'🐰':c.id==='Haziq'?'🏍️':'🛻'}'">`:(c.id==='Nurin'?'🐰':c.id==='Haziq'?'🏍️':'🛻')}</div>
       <div class="board-name">${c.id}${v===lead&&v>0?'<span class="crown">👑</span>':''}</div>
       <div class="board-bar"><i style="width:${Math.round(v/max*100)}%"></i></div><div class="board-num">${v}</div>`; el.appendChild(row); });
 }
@@ -316,7 +372,7 @@ function confetti(strong){ cv.hidden=false; cv.width=innerWidth; cv.height=inner
 function buildCharSelect(){ const g=$('#char-grid'); g.innerHTML=''; const owner=getOwner();
   CHARS.forEach(c=>{ const v=getColl(c.id).size, locked=owner&&c.id!==owner, src=FACE_SRC[c.id];
     const card=document.createElement('button'); card.className='char-card'+(locked?' locked':'');
-    card.innerHTML=`<div class="char-ava" style="background:${hexCss(c.color)};overflow:hidden">${locked?'🔒':(src?`<img src="${src}" style="width:100%;height:100%;object-fit:cover">`:'')}</div>
+    card.innerHTML=`<div class="char-ava" style="background:${hexCss(c.color)};overflow:hidden">${locked?'🔒':(src?`<img src="${src}" style="width:100%;height:100%;object-fit:cover" onerror="this.remove();this.parentElement.textContent='${c.id==='Nurin'?'🐰':c.id==='Haziq'?'🏍️':'🛻'}'">`:(c.id==='Nurin'?'🐰':c.id==='Haziq'?'🏍️':'🛻'))}</div>
       <div class="char-name">${c.id}</div><div class="char-count">${locked?'Not you':('📸 '+v+' photos')}</div>`;
     if(locked) card.disabled=true; else card.addEventListener('click',()=>{ ac(); me=c; startGame(); }); g.appendChild(card); });
 }
