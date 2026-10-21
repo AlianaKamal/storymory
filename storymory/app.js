@@ -135,7 +135,7 @@ function rectsHit(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y
 
 function update(){
   stage=stageAtX(player.x);
-  if(stage!==prevStage){ prevStage=stage; sUp(); $('#hud-stage').textContent=stage>=ZONES?'AUTO-LARI! 🔥':'Stage '+stage; }
+  if(stage!==prevStage){ prevStage=stage; sUp(); $('#hud-stage').textContent=stage>=ZONES?'AUTO-RUN! 🔥':'Stage '+stage; }
   const autorun=stage>=ZONES, spd=SPD[stage-1];
   $('#btn-left').style.opacity=autorun?'.3':'1'; $('#btn-right').style.opacity=autorun?'.3':'1';
 
@@ -183,35 +183,67 @@ const imgCache={};
 function getImg(src){ if(!src)return null; if(!imgCache[src]){const im=new Image();im.src=src;imgCache[src]=im;} return imgCache[src]; }
 function ready(im){ return im&&im.complete&&im.naturalWidth; }
 
+const FLOOR_DEPTH=150;
 function draw(){
+  const warm = stage>=ZONES;
+  // candy sky
   const g=ctx.createLinearGradient(0,0,0,H);
-  if(stage>=ZONES){ g.addColorStop(0,'#5a2a3a'); g.addColorStop(1,'#ff8a5c'); }
-  else { g.addColorStop(0,'#2a4d7a'); g.addColorStop(1,'#5ec8ff'); }
+  if(warm){ g.addColorStop(0,'#ffe8a8'); g.addColorStop(1,'#ff9f7a'); }
+  else { g.addColorStop(0,'#ffd1ec'); g.addColorStop(1,'#bfeaff'); }
   ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
-  ctx.fillStyle=stage>=ZONES?'#7a3b52':'#3e6fa6'; drawHills(0.3,groundY+40,90);
-  ctx.fillStyle=stage>=ZONES?'#9c4f68':'#4f86c6'; drawHills(0.6,groundY+70,70);
-  ctx.fillStyle='rgba(255,255,255,.7)'; for(let i=0;i<6;i++){ const cx=((i*520-camX*0.4)%worldW+worldW)%worldW; cloud(cx,70+(i%3)*40); }
+  const horizon=groundY-FLOOR_DEPTH;
+  ctx.fillStyle=warm?'#ffcf9a':'#c9a9ff'; drawHills(0.25, horizon+16, 58);
+  ctx.fillStyle=warm?'#ff9f7a':'#ffc69a'; drawHills(0.45, horizon+32, 42);
+  ctx.fillStyle='rgba(255,255,255,.82)'; for(let i=0;i<6;i++){ const cx=((i*520-camX*0.35)%worldW+worldW)%worldW; cloud(cx, 58+(i%3)*32); }
+  drawFloor(warm);
 
   ctx.save(); ctx.translate(-camX,0);
+  // soft shadows on the floor
+  ctx.fillStyle='rgba(70,20,70,.16)';
+  for(const t of coins){ if(!t.got) shadowEllipse(t.x, groundY, 18); }
+  shadowEllipse(player.x+player.w/2, groundY, 26);
+
+  // platforms / ground
   for(const s of solids){
-    if(s.ground){ ctx.fillStyle='#6b4a2b'; ctx.fillRect(s.x,s.y,s.w,s.h); ctx.fillStyle='#3fae57'; ctx.fillRect(s.x,s.y,s.w,14); }
-    else{ ctx.fillStyle='#caa24a'; roundRect(s.x,s.y,s.w,s.h,5); ctx.fill(); ctx.fillStyle='rgba(255,255,255,.25)'; ctx.fillRect(s.x,s.y,s.w,4); }
+    if(s.ground){ ctx.fillStyle=warm?'#e08a5a':'#59d99a'; ctx.fillRect(s.x,s.y,s.w,s.h);
+      ctx.fillStyle='rgba(255,255,255,.4)'; ctx.fillRect(s.x,s.y,s.w,10); }
+    else { ctx.fillStyle='#b57bff'; roundRect(s.x,s.y+4,s.w,s.h,6); ctx.fill();        // block side
+      ctx.fillStyle='#ffe15c'; roundRect(s.x,s.y,s.w,Math.max(6,s.h-4),6); ctx.fill(); // top
+      ctx.fillStyle='rgba(255,255,255,.45)'; ctx.fillRect(s.x+4,s.y+3,s.w-8,3); }
   }
-  ctx.fillStyle='#e23b4e'; for(const o of obstacles){ ctx.beginPath(); ctx.moveTo(o.x,o.y+o.h); ctx.lineTo(o.x+o.w/2,o.y); ctx.lineTo(o.x+o.w,o.y+o.h); ctx.closePath(); ctx.fill(); }
+  // candy spikes
+  ctx.fillStyle='#ff4d6d'; for(const o of obstacles){ ctx.beginPath(); ctx.moveTo(o.x,o.y+o.h); ctx.lineTo(o.x+o.w/2,o.y); ctx.lineTo(o.x+o.w,o.y+o.h); ctx.closePath(); ctx.fill(); }
 
   for(const t of coins){ if(t.got)continue; drawCoin(t.x,t.y,t.r,t.item); }
   if(secret && !secret.got) drawSecret(secret);
 
-  // goal
-  ctx.fillStyle='#e8e8e8'; ctx.fillRect(goalX,groundY-150,6,150);
+  // goal flag
+  ctx.fillStyle='#fff'; ctx.fillRect(goalX,groundY-150,6,150);
   ctx.fillStyle=me.color; ctx.beginPath(); ctx.moveTo(goalX+6,groundY-150); ctx.lineTo(goalX+52,groundY-134); ctx.lineTo(goalX+6,groundY-118); ctx.fill();
   ctx.font='13px sans-serif'; ctx.textAlign='center'; ctx.fillText('🏁',goalX+28,groundY-126);
 
   drawVehicle();
   ctx.restore();
 }
-function drawHills(f,baseY,h){ const off=-camX*f; ctx.beginPath(); ctx.moveTo(0,H);
-  for(let x=-200;x<W+200;x+=20){ const y=baseY-Math.abs(Math.sin((x+off)/160))*h; ctx.lineTo(x,y); } ctx.lineTo(W,H); ctx.closePath(); ctx.fill(); }
+function shadowEllipse(x,y,w){ ctx.beginPath(); ctx.ellipse(x,y,w,w*0.32,0,0,7); ctx.fill(); }
+function drawFloor(warm){
+  const frontY=groundY, backY=groundY-FLOOR_DEPTH, inset=W*0.18;
+  ctx.fillStyle=warm?'#f0a56a':'#7fe6b5';
+  ctx.beginPath(); ctx.moveTo(0,frontY); ctx.lineTo(W,frontY); ctx.lineTo(W-inset,backY); ctx.lineTo(inset,backY); ctx.closePath(); ctx.fill();
+  // depth lines that scroll (sense of motion) and converge to the back
+  ctx.strokeStyle='rgba(255,255,255,.35)'; ctx.lineWidth=2;
+  const sp=70, off=((camX%sp)+sp)%sp;
+  for(let fx=-off; fx<=W+sp; fx+=sp){ const t=fx/W, bx=inset+(W-2*inset)*t;
+    ctx.beginPath(); ctx.moveTo(fx,frontY); ctx.lineTo(bx,backY); ctx.stroke(); }
+  // depth bands (closer toward the back)
+  ctx.strokeStyle='rgba(255,255,255,.22)';
+  [0.3,0.58,0.8].forEach(d=>{ const y=frontY-(frontY-backY)*d, ix=inset*d;
+    ctx.beginPath(); ctx.moveTo(ix,y); ctx.lineTo(W-ix,y); ctx.stroke(); });
+  // front edge band
+  ctx.fillStyle=warm?'#c76a3f':'#49c98a'; ctx.fillRect(0,frontY,W,H-frontY);
+}
+function drawHills(f,baseY,h){ const off=-camX*f; ctx.beginPath(); ctx.moveTo(0,baseY+h);
+  for(let x=-200;x<W+200;x+=20){ const y=baseY-Math.abs(Math.sin((x+off)/160))*h; ctx.lineTo(x,y); } ctx.lineTo(W,baseY+h); ctx.closePath(); ctx.fill(); }
 function cloud(x,y){ ctx.beginPath(); ctx.arc(x,y,16,0,7); ctx.arc(x+18,y+4,20,0,7); ctx.arc(x+40,y,15,0,7); ctx.fill(); }
 function roundRect(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
 
@@ -233,7 +265,7 @@ function drawSecret(s){ const t=Date.now()/300; const pr=1+Math.sin(t)*0.08; ctx
   ctx.restore();
   // label
   ctx.save(); ctx.font='bold 12px sans-serif'; ctx.fillStyle='#fff'; ctx.strokeStyle='rgba(0,0,0,.6)'; ctx.lineWidth=3; ctx.textAlign='center';
-  ctx.strokeText('RAHSIA!',s.x,s.y-s.r-16); ctx.fillText('RAHSIA!',s.x,s.y-s.r-16); ctx.restore(); }
+  ctx.strokeText('SECRET!',s.x,s.y-s.r-16); ctx.fillText('SECRET!',s.x,s.y-s.r-16); ctx.restore(); }
 
 /* ---- cute vehicles (face bobs; flips with direction) ---- */
 function drawFace(r,bob,f){ // draws the rider head/face, un-mirrored
