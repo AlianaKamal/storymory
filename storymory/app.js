@@ -138,6 +138,13 @@ function makeRide(vehicle){
     tailPanel.position.set(0,.53,.585); tailPanel.scale.set(.19,.13,.085); g.add(tailPanel);
     const tailLamp=new THREE.Mesh(new THREE.SphereGeometry(1,12,10),pink);
     tailLamp.position.set(0,.55,.66); tailLamp.scale.set(.105,.065,.035); g.add(tailLamp);
+    // Tiny white bunny-tail badge on the rear panel, visible while riding away.
+    const bunnyTail=new THREE.Mesh(new THREE.SphereGeometry(.085,12,10),white);
+    bunnyTail.position.set(0,.565,.695); bunnyTail.scale.set(1,.82,.45); g.add(bunnyTail);
+    for(const side of [-1,1]){
+      const tailDot=new THREE.Mesh(new THREE.SphereGeometry(.032,8,6),palePink);
+      tailDot.position.set(side*.045,.565,.722); g.add(tailDot);
+    }
     // Front fork and handlebars.
     const fork=new THREE.Mesh(new THREE.CylinderGeometry(.065,.075,.53,12),chrome);
     fork.position.set(0,.72,-.49); fork.rotation.x=-.12; g.add(fork);
@@ -147,14 +154,20 @@ function makeRide(vehicle){
       const grip=new THREE.Mesh(new THREE.CylinderGeometry(.055,.055,.14,10),pink);
       grip.position.set(side*.31,1.00,-.48); grip.rotation.z=Math.PI/2; g.add(grip);
     }
-    // Bunny ears are positioned on the side silhouette, visible from behind the rider.
+    // Tall bunny ears sit outside the rider silhouette so the pair remains visible
+    // in the rear-follow camera, rather than looking like white tubes at shoulder level.
     for(const side of [-1,1]){
-      const ear=new THREE.Mesh(new THREE.CapsuleGeometry(.09,.34,5,12),white);
-      ear.position.set(side*.37,1.02,.31); ear.rotation.z=side*.10; g.add(ear);
-      const inner=new THREE.Mesh(new THREE.CapsuleGeometry(.043,.255,4,10),palePink);
-      inner.position.set(side*.37,1.03,.405); inner.rotation.z=side*.10; g.add(inner);
-      const earBase=new THREE.Mesh(new THREE.SphereGeometry(.105,12,10),white);
-      earBase.position.set(side*.34,.80,.30); g.add(earBase);
+      const ear=new THREE.Mesh(new THREE.CapsuleGeometry(.075,.48,6,12),white);
+      ear.position.set(side*.445,1.22,.28);
+      ear.rotation.z=side*.10;
+      g.add(ear);
+      const inner=new THREE.Mesh(new THREE.CapsuleGeometry(.034,.37,5,10),palePink);
+      inner.position.set(side*.445,1.23,.365);
+      inner.rotation.z=side*.10;
+      g.add(inner);
+      const earBase=new THREE.Mesh(new THREE.SphereGeometry(.09,14,12),white);
+      earBase.position.set(side*.405,.94,.29);
+      g.add(earBase);
     }
     // Small bunny face badge on the front of the scooter (toward -Z).
     const facePlate=new THREE.Mesh(new THREE.SphereGeometry(1,16,12),white);
@@ -226,8 +239,10 @@ function init3D(){
   const body=new THREE.Mesh(new THREE.CapsuleGeometry(0.37,0.38,8,16),shirtMat);
   body.position.set(0,0.98,0.06); body.rotation.x=-0.12; player3d.add(body);
   // Big chibi head with a friendly face, facing the camera (+Z).
-  const head=new THREE.Mesh(new THREE.SphereGeometry(0.47,24,20),skinMat);
-  head.position.set(0,1.62,0.12); player3d.add(head);
+  // Keep the face volume slightly forward. For hijab characters the scarf shell
+  // is deliberately wider/deeper at the rear so skin cannot peek through the back view.
+  const head=new THREE.Mesh(new THREE.SphereGeometry(0.455,28,22),skinMat);
+  head.position.set(0,1.62,me.id==='Haziq'?0.12:-0.075); player3d.add(head);
   const hairMat=new THREE.MeshLambertMaterial({color:hairColor});
   if(me.id==='Haziq'){
     // Haziq keeps the tousled, spiky dark-brown hairstyle from the character card.
@@ -247,32 +262,31 @@ function init3D(){
     // Nurin and Yana wear a dark-brown hijab. The hood covers the back and sides
     // of the head, while leaving the face opening on the forward (-Z) side clear.
     const hijabMat=new THREE.MeshLambertMaterial({color:0x4a2b26});
-    // Smooth full hood silhouette: from the trailing camera it reads as a hijab,
-    // not exposed hair. The face details are on the forward side of the head.
-    const hoodBack=new THREE.Mesh(new THREE.SphereGeometry(.505,28,24),hijabMat);
-    hoodBack.position.set(0,1.67,.115);
-    hoodBack.scale.set(1.00,1.04,.86);
+    // Full rounded hijab shell. Its back is intentionally oversized and opaque:
+    // from the trailing camera it must read as fabric, never a patch of skin/hair.
+    const hoodBack=new THREE.Mesh(new THREE.SphereGeometry(.535,32,28),hijabMat);
+    hoodBack.position.set(0,1.665,.17);
+    hoodBack.scale.set(1.04,1.08,1.10);
     player3d.add(hoodBack);
-    // Side panels frame the cheeks and continue down over the shoulders.
+
+    // Lower rear scarf panel drapes over the neck and shoulders.
+    const backDrape=new THREE.Mesh(new THREE.SphereGeometry(1,28,20),hijabMat);
+    backDrape.position.set(0,1.255,.235);
+    backDrape.scale.set(.49,.48,.39);
+    player3d.add(backDrape);
+
+    // Side folds frame the face and join the shoulder drape smoothly.
     for(const side of [-1,1]){
-      const fold=new THREE.Mesh(new THREE.SphereGeometry(1,18,14),hijabMat);
-      fold.position.set(side*.335,1.45,.15);
-      fold.scale.set(.205,.43,.31);
+      const fold=new THREE.Mesh(new THREE.SphereGeometry(1,20,16),hijabMat);
+      fold.position.set(side*.355,1.43,.12);
+      fold.scale.set(.205,.43,.35);
       player3d.add(fold);
     }
-    // Broad rounded triangular drape: this gives the rear silhouette a scarf/khimar shape.
-    const drape=new THREE.Mesh(new THREE.ConeGeometry(.49,.72,24,1,false),hijabMat);
-    drape.position.set(0,1.17,.20);
-    drape.scale.set(1.12,1.0,.72);
-    drape.rotation.x=Math.PI;
-    player3d.add(drape);
-    const shoulderDrape=new THREE.Mesh(new THREE.SphereGeometry(1,22,16),hijabMat);
-    shoulderDrape.position.set(0,1.18,.19);
-    shoulderDrape.scale.set(.48,.25,.31);
+    const shoulderDrape=new THREE.Mesh(new THREE.SphereGeometry(1,24,18),hijabMat);
+    shoulderDrape.position.set(0,1.12,.16);
+    shoulderDrape.scale.set(.47,.30,.34);
     player3d.add(shoulderDrape);
-    // Subtle curved seam around the lower back edge of the scarf.
-    const seam=new THREE.Mesh(new THREE.TorusGeometry(.29,.009,6,32,Math.PI),new THREE.MeshLambertMaterial({color:0x70423a}));
-    seam.position.set(0,1.31,.445); seam.rotation.x=Math.PI/2; player3d.add(seam);
+    // Avoid a curved seam across the rear head, which looked like a hairline in screenshots.
   }
   // Eyes, blush and smile are simple geometry so no external art files are needed.
   const eyeMat=new THREE.MeshBasicMaterial({color:0x30233a});
