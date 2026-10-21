@@ -77,6 +77,8 @@ let items=[];            // {mesh,kind,lane,z,done,item,spin}
 let scenery=[], nextScene;   // side buildings/trees
 let travel, speed, nextSpawn, coinLane, coinScore, zoneIdx, prevZone, running, raf;
 let pLane, pLaneF, jumpY, jumpVy, animT, secretArmed, caughtSecret;
+let lives=3, hitCooldown=0;
+function updateLivesHud(){const el=$('#hud-lives');if(el)el.textContent='💗'.repeat(Math.max(0,lives))+'♡'.repeat(Math.max(0,3-lives));}
 const keys={};
 
 function zoneOf(d){ return Math.min(ZONES.length-1, Math.floor(d/ZONE_LEN)); }
@@ -145,12 +147,14 @@ function makeRide(vehicle){
       const grip=new THREE.Mesh(new THREE.CylinderGeometry(.055,.055,.14,10),pink);
       grip.position.set(side*.31,1.00,-.48); grip.rotation.z=Math.PI/2; g.add(grip);
     }
-    // Rabbit ears rise above the front cowl and peek around the rider's silhouette.
+    // Bunny ears are positioned on the side silhouette, visible from behind the rider.
     for(const side of [-1,1]){
-      const ear=new THREE.Mesh(new THREE.CapsuleGeometry(.085,.31,5,10),white);
-      ear.position.set(side*.19,1.14,-.57); ear.rotation.z=side*.13; g.add(ear);
-      const inner=new THREE.Mesh(new THREE.CapsuleGeometry(.038,.235,4,8),palePink);
-      inner.position.set(side*.19,1.145,-.495); inner.rotation.z=side*.13; g.add(inner);
+      const ear=new THREE.Mesh(new THREE.CapsuleGeometry(.078,.27,5,10),white);
+      ear.position.set(side*.365,.99,.02); ear.rotation.z=side*.12; g.add(ear);
+      const inner=new THREE.Mesh(new THREE.CapsuleGeometry(.034,.20,4,8),palePink);
+      inner.position.set(side*.365,1.00,.105); inner.rotation.z=side*.12; g.add(inner);
+      const earBase=new THREE.Mesh(new THREE.SphereGeometry(.105,12,10),white);
+      earBase.position.set(side*.34,.79,.06); g.add(earBase);
     }
     // Small bunny face badge on the front of the scooter (toward -Z).
     const facePlate=new THREE.Mesh(new THREE.SphereGeometry(1,16,12),white);
@@ -243,25 +247,29 @@ function init3D(){
     // Nurin and Yana wear a dark-brown hijab. The hood covers the back and sides
     // of the head, while leaving the face opening on the forward (-Z) side clear.
     const hijabMat=new THREE.MeshLambertMaterial({color:0x4a2b26});
+    // Smooth full hood silhouette: from the trailing camera it reads as a hijab,
+    // not exposed hair. The face details are on the forward side of the head.
     const hoodBack=new THREE.Mesh(
-      new THREE.SphereGeometry(.515,28,24,0,Math.PI,0,Math.PI),
+      new THREE.SphereGeometry(.505,28,24),
       hijabMat
     );
-    hoodBack.position.set(0,1.67,.10); player3d.add(hoodBack);
-    // Soft side folds frame the head and blend down into the shoulders.
+    hoodBack.position.set(0,1.66,.115);
+    hoodBack.scale.set(1.02,1.04,1.0);
+    player3d.add(hoodBack);
+    // Side folds and a wider shoulder drape create the recognisable hijab outline.
     for(const side of [-1,1]){
       const fold=new THREE.Mesh(new THREE.SphereGeometry(1,16,14),hijabMat);
-      fold.position.set(side*.355,1.51,-.005);
-      fold.scale.set(.16,.36,.32);
+      fold.position.set(side*.345,1.47,.12);
+      fold.scale.set(.18,.39,.32);
       player3d.add(fold);
     }
-    const drape=new THREE.Mesh(new THREE.SphereGeometry(1,20,16),hijabMat);
-    drape.position.set(0,1.22,.13);
-    drape.scale.set(.405,.43,.31);
+    const drape=new THREE.Mesh(new THREE.SphereGeometry(1,22,18),hijabMat);
+    drape.position.set(0,1.20,.16);
+    drape.scale.set(.445,.48,.34);
     player3d.add(drape);
-    // A subtle stitched edge on the back of the hijab.
-    const seam=new THREE.Mesh(new THREE.TorusGeometry(.245,.012,6,24,Math.PI),new THREE.MeshLambertMaterial({color:0x68413a}));
-    seam.position.set(0,1.49,.392); seam.rotation.x=Math.PI/2; player3d.add(seam);
+    // A fine seam on the rear lower edge, kept subtle so it does not look like hair.
+    const seam=new THREE.Mesh(new THREE.TorusGeometry(.255,.009,6,28,Math.PI),new THREE.MeshLambertMaterial({color:0x68413a}));
+    seam.position.set(0,1.38,.445); seam.rotation.x=Math.PI/2; player3d.add(seam);
   }
   // Eyes, blush and smile are simple geometry so no external art files are needed.
   const eyeMat=new THREE.MeshBasicMaterial({color:0x30233a});
@@ -441,11 +449,13 @@ function togglePause(){
 }
 function startGame(){
   showScreen('screen-game'); if(!THREEok) init3D(); resize3D();
-  paused=false; const pauseBtn=$('#hud-pause'); if(pauseBtn)pauseBtn.textContent='Ⅱ'; clearItems(); clearScenery(); travel=0; speed=18; nextSpawn=0; nextScene=6; coinLane=1; coinScore=0; secretArmed=true; caughtSecret=null;
+  paused=false; lives=3; hitCooldown=0; updateLivesHud(); const pauseBtn=$('#hud-pause'); if(pauseBtn)pauseBtn.textContent='Ⅱ'; clearItems(); clearScenery(); travel=0; speed=18; nextSpawn=0; nextScene=6; coinLane=1; coinScore=0; secretArmed=true; caughtSecret=null;
   for(let z=-5; z>SPAWN_Z; z-=6){ for(const side of [-1,1]) placeScene(side,z,ZONES[0]); }  // prefill both sides, dense
   pLane=1; pLaneF=1; jumpY=0; jumpVy=0; animT=0; zoneIdx=0; prevZone=-1;
   applyZone(ZONES[0]); player3d.position.set(0,0,0);
-  $('#hud-char').textContent=me.id; $('#hud-score').textContent=0; $('#hud-stage').textContent=ZONES[0].name;
+  $('#hud-char').textContent=me.id; $('#hud-score').textContent=0; $('#hud-stage').textContent='STAGE 1';
+  const face=$('#hud-avatar'); if(face){const src=FACE_SRC[me.id]; face.innerHTML=src?`<img src="${src}" alt="">`:(me.id==='Nurin'?'🐰':me.id==='Haziq'?'🏍️':'🛻');}
+  const photoCount=$('#hud-photos'); if(photoCount)photoCount.textContent=`${getColl(me.id).size}/${POOL.length}`;
   running=true; clock.start(); cancelAnimationFrame(raf); loop();
 }
 
@@ -501,7 +511,12 @@ function update(dt){
     if(!o.done && o.z>-0.6){ o.done=true; const same=o.lane===pr;
       if(o.kind==='coin'){ if(same && jumpY<1.6){ coinScore++; sCoin(); $('#hud-score').textContent=coinScore; o.hide=true; } }
       else if(o.kind==='secret'){ if(same){ caughtSecret=o.item; return endRun('secret'); } }
-      else { if(same && jumpY<1.2){ return endRun('over'); } }
+      else { if(same && jumpY<1.2 && hitCooldown<=0){
+        lives--; updateLivesHud(); hitCooldown=1.15; o.hide=true;
+        if(player3d)player3d.scale.set(.92,.92,.92);
+        beep(220,130,'sawtooth',.16,.15);
+        if(lives<=0)return endRun('over');
+      } }
     }
   }
   for(const o of items){ if(o.hide){ o.mesh.visible=false; } }
@@ -526,17 +541,38 @@ document.addEventListener('keydown',e=>{ if(!running)return; if(e.key==='ArrowLe
 function endRun(result){
   if(!running)return; running=false; cancelAnimationFrame(raf);
   saveBestCoins(me.id,Math.max(getBestCoins(me.id),coinScore));
-  if(result==='secret'&&caughtSecret){ const coll=getColl(me.id); coll.add(caughtSecret.id); saveColl(me.id,coll); }
+  if(result==='secret'&&caughtSecret){ const coll=getColl(me.id); coll.add(caughtSecret.id); saveColl(me.id,coll); const photoCount=$('#hud-photos');if(photoCount)photoCount.textContent=`${coll.size}/${POOL.length}`; }
   pushScore(me.id); const total=getColl(me.id).size;
-  if(result==='secret'){ sSecret(); confetti(true); $('#win-emoji').textContent='🎁'; $('#win-title').textContent='SECRET FOUND!';
-    const cap=caughtSecret&&caughtSecret.caption?` — "${caughtSecret.caption}"`:''; $('#win-sub').textContent=`New photo for ${me.id}${cap} 🎉 · coins: ${coinScore} · photos: ${total}`;
-    if(caughtSecret&&caughtSecret.img) showReveal(caughtSecret.img); }
-  else if(result==='win'){ sSecret(); const left=POOL.some(p=>!getColl(me.id).has(p.id)); $('#win-emoji').textContent=left?'🏁':'🏆';
-    $('#win-title').textContent=left?'Finished the office!':'All photos collected!'; $('#win-sub').textContent=`coins: ${coinScore} · ${me.id}'s photos: ${total}`; }
-  else { sOver(); $('#win-emoji').textContent='💥'; $('#win-title').textContent='Crashed! Game over'; $('#win-sub').textContent=`coins: ${coinScore} · ${me.id}'s photos: ${total}`; }
+  const banner=$('.win-confetti-label'), sticker=$('.win-sticker');
+  if(result==='secret'){
+    sSecret(); confetti(true); $('#win-emoji').textContent='🎁'; $('#win-title').textContent='MEMORY UNLOCKED!';
+    if(banner)banner.textContent='✦ NEW MEMORY! ✦'; if(sticker)sticker.hidden=false;
+    const cap=caughtSecret&&caughtSecret.caption?`“${caughtSecret.caption}”`: 'A little internship memory';
+    $('#win-sub').textContent=`${cap} · coins: ${coinScore} · photos: ${total}`;
+    showRevealMemory(caughtSecret);
+  }
+  else if(result==='win'){
+    sSecret(); confetti(true); const left=POOL.some(p=>!getColl(me.id).has(p.id)); $('#win-emoji').textContent=left?'🏁':'🏆';
+    $('#win-title').textContent=left?'Round complete!':'All memories collected!';
+    if(banner)banner.textContent='✦ ROUND COMPLETE! ✦'; if(sticker)sticker.hidden=true;
+    $('#win-sub').textContent=`coins: ${coinScore} · ${me.id}'s photos: ${total}`;
+  }
+  else {
+    sOver(); $('#win-emoji').textContent='💥'; $('#win-title').textContent='Oops! Game over';
+    if(banner)banner.textContent='✦ TRY AGAIN! ✦'; if(sticker)sticker.hidden=true;
+    $('#win-sub').textContent=`coins: ${coinScore} · ${me.id}'s photos: ${total}`;
+    $('#reveal-media').innerHTML='';
+  }
   loadScores().then(()=>buildBoard('#win-board')); showScreen('screen-win');
 }
-function showReveal(src){ const m=$('#reveal-media'); if(!m)return; m.innerHTML=`<img src="${src}" alt="">`; }
+function showReveal(src){ const m=$('#reveal-media'); if(!m)return; m.innerHTML=`<img src="${src}" alt="Internship memory">`; }
+function showRevealMemory(item){
+  const m=$('#reveal-media'); if(!m)return;
+  if(item && item.img){ showReveal(item.img); return; }
+  const caption=item&&item.caption?item.caption:'A little internship memory';
+  const date=item&&item.date?new Date(item.date+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'Internship memories';
+  m.innerHTML=`<div class="memory-reveal-card"><div class="memory-reveal-photo"><span>📸</span><b>MEMORY UNLOCKED</b></div><strong>${caption}</strong><small>${date}</small></div>`;
+}
 
 /* ---- leaderboard / gallery / confetti / select / nav / boot ---- */
 function buildBoard(sel){ const el=$(sel); el.innerHTML='';
@@ -549,7 +585,17 @@ function buildBoard(sel){ const el=$(sel); el.innerHTML='';
 }
 function buildGallery(char){ $('#gal-char').textContent=char; const coll=getColl(char); const grid=$('#gal-grid'); grid.innerHTML='';
   POOL.forEach(p=>{ const c=document.createElement('div'); c.className='cell';
-    if(coll.has(p.id)){ c.innerHTML=p.img?`<img src="${p.img}" alt="">`:`<div class="ph">📸</div>`; } else { c.classList.add('locked'); c.textContent='?'; } grid.appendChild(c); });
+    if(coll.has(p.id)){
+      c.innerHTML=p.img?`<img src="${p.img}" alt="${p.caption||'Internship memory'}">`:`<div class="ph memory-placeholder"><span>📸</span><small>Photo not added yet</small></div>`;
+      const meta=CONTENT.find(it=>it.id===p.id);
+      if(meta && (meta.caption||meta.date)){
+        const cap=document.createElement('span');cap.className='memory-caption';
+        const d=meta.date?new Date(meta.date+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'';
+        cap.textContent=[meta.caption,d].filter(Boolean).join(' · ');c.appendChild(cap);
+      }
+    } else { c.classList.add('locked'); c.innerHTML='<span class="lock-mark">🔒</span><small>???</small>'; }
+    grid.appendChild(c);
+  });
   loadScores().then(()=>buildBoard('#gal-board'));
 }
 const cv=$('#confetti'),cctx=cv.getContext('2d');
