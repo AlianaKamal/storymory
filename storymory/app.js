@@ -62,15 +62,18 @@ const sOver=()=>{[400,300,200].forEach((f,i)=>setTimeout(()=>beep(f,f*0.8,'sawto
    3D OFFICE RUNNER (Three.js)
    =========================================================================== */
 const ZONES=[
-  {id:'entrance',    name:'KOLEJ KOMUNITI TEMERLOH', bg:0x9fc4f0, fog:0x9fc4f0, floor:0xdce6f5, lane:0xbcd0ec, wall:0x6fa8e8, accent:0xffd23f},
-  {id:'pengambilan', name:'Bilik Pengambilan',       bg:0xffd4b4, fog:0xffd9c2, floor:0xffe9cf, lane:0xffd0b0, wall:0xff9ec4, accent:0xff5c8a},
+  {id:'entrance',    name:'KOLEJ KOMUNITI TEMERLOH', bg:0x9fc4f0, fog:0xcfe3f7, floor:0xdce6f5, lane:0xbcd0ec, accent:0xffd23f,
+    ground:0xbfe3a8, blds:[0xeaf1ff,0xbcd0ec,0x9fc4f0,0xffffff,0xd7e8ff]},
+  {id:'pengambilan', name:'Bilik Pengambilan',       bg:0xffd4b4, fog:0xffe2cf, floor:0xffe9cf, lane:0xffd0b0, accent:0xff5c8a,
+    ground:0xf3d7bd, blds:[0xffc9a0,0xffb3c9,0xffe0b0,0xffd4e0,0xffe8cf]},
 ];
 const ZONE_LEN=230, LANE=2.2, SPAWN_Z=-130;
 
 let me=null;
 let renderer, scene, camera, clock, THREEok=false;
-let floorMesh, floorTex, walls=[], player3d, legL, legR;
+let floorMesh, floorTex, groundMesh, player3d, legL, legR;
 let items=[];            // {mesh,kind,lane,z,done,item,spin}
+let scenery=[], nextScene;   // side buildings/trees
 let travel, speed, nextSpawn, coinLane, coinScore, zoneIdx, prevZone, running, raf;
 let pLane, pLaneF, jumpY, jumpVy, animT, secretArmed, caughtSecret;
 const keys={};
@@ -96,16 +99,13 @@ function init3D(){
   const dir=new THREE.DirectionalLight(0xffffff,0.65); dir.position.set(5,12,6); scene.add(dir);
   clock=new THREE.Clock();
 
-  // floor
+  // wide ground under everything (open-sky street look)
+  groundMesh=new THREE.Mesh(new THREE.PlaneGeometry(90,300), new THREE.MeshLambertMaterial({color:ZONES[0].ground}));
+  groundMesh.rotation.x=-Math.PI/2; groundMesh.position.set(0,-0.03,-130); scene.add(groundMesh);
+  // running floor (lanes) on top
   floorTex=makeFloorTexture(ZONES[0]);
   floorMesh=new THREE.Mesh(new THREE.PlaneGeometry(9,300), new THREE.MeshBasicMaterial({map:floorTex}));
   floorMesh.rotation.x=-Math.PI/2; floorMesh.position.set(0,0,-130); scene.add(floorMesh);
-  // side walls
-  for(const sx of [-6.2,6.2]){ const m=new THREE.Mesh(new THREE.BoxGeometry(1,6,300), new THREE.MeshLambertMaterial({color:ZONES[0].wall}));
-    m.position.set(sx,3,-130); scene.add(m); walls.push(m); }
-  // ceiling light strip
-  const ceil=new THREE.Mesh(new THREE.BoxGeometry(5,0.2,300), new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.5}));
-  ceil.position.set(0,6,-130); scene.add(ceil);
 
   // player — cute chibi runner (rounded shapes)
   player3d=new THREE.Group();
@@ -135,9 +135,9 @@ function init3D(){
 function resize3D(){ const r=$('#game').getBoundingClientRect(); renderer.setSize(r.width,r.height,false);
   camera.aspect=r.width/Math.max(1,r.height); camera.updateProjectionMatrix(); }
 
-function applyZone(Z){ scene.background=new THREE.Color(Z.bg); scene.fog=new THREE.Fog(Z.fog,18,95);
-  floorTex.dispose&&0; const nt=makeFloorTexture(Z); floorMesh.material.map=nt; floorMesh.material.needsUpdate=true; floorTex=nt;
-  walls.forEach(w=>w.material.color.setHex(Z.wall)); }
+function applyZone(Z){ scene.background=new THREE.Color(Z.bg); scene.fog=new THREE.Fog(Z.fog,22,120);
+  const nt=makeFloorTexture(Z); floorMesh.material.map=nt; floorMesh.material.needsUpdate=true; floorTex=nt;
+  groundMesh.material.color.setHex(Z.ground); }
 
 function clearItems(){ for(const o of items) scene.remove(o.mesh); items=[]; }
 
@@ -173,9 +173,34 @@ function makeProp(side,Z){ const g=new THREE.Group(); const t=Math.floor(Math.ra
     const lamp=new THREE.Mesh(new THREE.SphereGeometry(0.28,8,8),new THREE.MeshLambertMaterial({color:0xfff3b0,emissive:0xffe066,emissiveIntensity:.5})); lamp.position.y=2.0; g.add(lamp); }
   return g; }
 
+/* ---- side scenery: cute buildings + trees ---- */
+function makeBuilding(side,Z){ const g=new THREE.Group();
+  const w=2.2+Math.random()*2.0, h=3+Math.random()*5.5, d=2.2+Math.random()*1.8;
+  const col=Z.blds[(Math.random()*Z.blds.length)|0];
+  const body=new THREE.Mesh(new THREE.BoxGeometry(w,h,d), new THREE.MeshLambertMaterial({color:col})); body.position.y=h/2; g.add(body);
+  // pitched roof
+  const roof=new THREE.Mesh(new THREE.ConeGeometry(w*0.82,1.5,4), new THREE.MeshLambertMaterial({color:Z.accent})); roof.position.y=h+0.7; roof.rotation.y=Math.PI/4; g.add(roof);
+  // lit windows on the face toward the lane
+  const winMat=new THREE.MeshLambertMaterial({color:0xfff3b0,emissive:0xffe066,emissiveIntensity:.5});
+  const faceX=-side*(w/2+0.02); const rows=Math.max(1,Math.floor(h/1.4)), cols=Math.max(1,Math.floor(w/1.1));
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){ const win=new THREE.Mesh(new THREE.BoxGeometry(0.06,0.55,0.45), winMat);
+    win.position.set(faceX, 1.0+r*1.4, (c-(cols-1)/2)*1.0); g.add(win); }
+  return g; }
+function makeTree(){ const g=new THREE.Group();
+  const tr=new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.28,1.2,10), new THREE.MeshLambertMaterial({color:0x9c6b3f})); tr.position.y=0.6; g.add(tr);
+  const gr=[0x6fcf6f,0x57c96a,0x8bdc7a]; const top=gr[(Math.random()*gr.length)|0];
+  for(const o of [[0,1.9,0,1.0],[-0.5,1.6,0.2,0.7],[0.5,1.65,-0.2,0.72]]){ const f=new THREE.Mesh(new THREE.SphereGeometry(o[3],12,12), new THREE.MeshLambertMaterial({color:top})); f.position.set(o[0],o[1],o[2]); g.add(f); }
+  return g; }
+function placeScene(side,z,Z){ const isTree=Math.random()<0.28; const m=isTree?makeTree():makeBuilding(side,Z);
+  const x=side*(6.3+Math.random()*2.6); m.position.set(x,0,z); m.rotation.y=(Math.random()-0.5)*0.4;
+  scene.add(m); scenery.push({mesh:m,x,z}); }
+function clearScenery(){ for(const s of scenery) scene.remove(s.mesh); scenery=[]; }
+function spawnSceneRow(){ const Z=ZONES[zoneOf(travel)]; for(const side of [-1,1]) if(Math.random()<0.9) placeScene(side,SPAWN_Z,Z); }
+
 function startGame(){
   showScreen('screen-game'); if(!THREEok) init3D(); resize3D();
-  clearItems(); travel=0; speed=18; nextSpawn=14; coinLane=1; coinScore=0; secretArmed=true; caughtSecret=null;
+  clearItems(); clearScenery(); travel=0; speed=18; nextSpawn=14; nextScene=9; coinLane=1; coinScore=0; secretArmed=true; caughtSecret=null;
+  for(let z=-8; z>SPAWN_Z; z-=9){ for(const side of [-1,1]) if(Math.random()<0.9) placeScene(side,z,ZONES[0]); }  // prefill both sides
   pLane=1; pLaneF=1; jumpY=0; jumpVy=0; animT=0; zoneIdx=0; prevZone=-1;
   applyZone(ZONES[0]); player3d.position.set(0,0,0);
   $('#hud-char').textContent=me.id; $('#hud-score').textContent=0; $('#hud-stage').textContent=ZONES[0].name;
@@ -210,6 +235,11 @@ function update(dt){
   player3d.position.y=jumpY;
   animT+=speed*dt*0.25; const lg=Math.sin(animT)*0.5; legL.rotation.x=lg; legR.rotation.x=-lg;
   camera.position.x += (laneX(pLaneF)*0.35 - camera.position.x)*Math.min(1,dt*6);
+
+  // side scenery scroll + spawn + recycle
+  while(travel>nextScene){ spawnSceneRow(); nextScene+=9; }
+  for(const s of scenery){ s.z+=speed*dt; s.mesh.position.z=s.z; }
+  scenery=scenery.filter(s=>{ if(s.z>16){ scene.remove(s.mesh); return false; } return true; });
 
   // spawns
   while(travel>nextSpawn){ spawnRow(); nextSpawn+=8; }
