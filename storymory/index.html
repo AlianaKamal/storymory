@@ -1,18 +1,28 @@
 <!doctype html>
-<html lang="en">
+<html lang="ms">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Internship Dash</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap">
+<meta name="theme-color" content="#08275f">
+<title>Internship Dash ⚡</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-<!-- CHARACTER SELECT (fallback only — used when the link has no ?me=Name) -->
-<section class="screen" id="screen-select" hidden>
+<!-- CHARACTER SELECT -->
+<section class="screen select-screen" id="screen-select" hidden>
+  <div class="select-decor decor-left">★</div><div class="select-decor decor-right">⚡</div>
+  <header class="brand">
+    <div class="brand-spark">✦ ★ ✦</div>
+    <h1 class="game-logo"><span>INTERNSHIP</span><strong>DASH</strong><i>!</i></h1>
+    <p class="brand-ribbon">CHOOSE YOUR CHARACTER</p>
+    <p class="brand-sub">Same team, different rides! ✨</p>
+  </header>
   <h2 class="scr-title">Choose your character</h2>
   <div class="char-grid" id="char-grid"></div>
+  <p class="select-tip">🏁 Collect coins · Dodge the chaos · Unlock memories!</p>
 </section>
 
 <!-- GAME -->
@@ -20,39 +30,55 @@
   <div class="hud">
     <span class="hud-char" id="hud-char">—</span>
     <span class="hud-stage" id="hud-stage">Stage 1</span>
-    <span class="hud-score">📸 <b id="hud-score">0</b></span>
-    <button class="hud-btn" id="hud-gallery" aria-label="Collection">📖</button>
+    <span class="hud-score">🪙 <b id="hud-score">0</b></span>
+    <button class="hud-btn" id="hud-gallery" aria-label="Collection" title="View collection">📸</button>
   </div>
+  <div class="game-sticker sticker-go">KEEP GOING!<span>⭐💨</span></div>
   <canvas id="game"></canvas>
   <div class="flyhint" id="flyhint">Swipe ← → to change lane · swipe up to jump</div>
 </section>
 
 <!-- WIN / RESULT -->
-<section class="screen" id="screen-win" hidden>
+<section class="screen win-screen" id="screen-win" hidden>
+  <div class="win-confetti-label">✦ ROUND COMPLETE! ✦</div>
   <div class="win-wrap">
     <div class="win-emoji" id="win-emoji">🎉</div>
     <h2 class="scr-title" id="win-title">Round complete!</h2>
     <div class="reveal-media" id="reveal-media"></div>
     <p class="win-sub" id="win-sub"></p>
     <div class="board" id="win-board"></div>
-    <button class="btn big" id="win-again">PLAY AGAIN</button>
+    <button class="btn big" id="win-again">▶ PLAY AGAIN</button>
     <button class="btn ghost" id="win-gallery">📖 View collection</button>
   </div>
+  <div class="win-sticker">MEMORY UNLOCKED! 💖</div>
 </section>
 
 <!-- GALLERY + LEADERBOARD -->
-<section class="screen" id="screen-gallery" hidden>
-  <h2 class="scr-title">Leaderboard 🏆</h2>
-  <div class="board" id="gal-board"></div>
-  <h3 class="gal-sub"><span id="gal-char"></span>'s collection</h3>
-  <div class="gal-grid" id="gal-grid"></div>
+<section class="screen gallery-screen" id="screen-gallery" hidden>
+  <header class="gallery-header">
+    <span class="gallery-eyebrow">YOUR INTERNSHIP ADVENTURE</span>
+    <h2 class="scr-title">Memory Hall of Fame 🏆</h2>
+    <p class="gallery-subtitle">Different paths. Same memories. Best team. ♡</p>
+  </header>
+  <div class="gallery-layout">
+    <aside class="leader-panel">
+      <h3>🏆 Leaderboard</h3>
+      <div class="board" id="gal-board"></div>
+      <div class="sticky-note">Best team<br>Best memories<br>Best chaos! ♡</div>
+    </aside>
+    <main class="memory-book">
+      <div class="book-heading"><span>📸</span><div><h3><span id="gal-char"></span>'s collection</h3><p>Little moments, big memories</p></div><span class="book-heart">♥</span></div>
+      <div class="gal-grid" id="gal-grid"></div>
+      <div class="book-footer">Made with ✦ and a little bit of chaos</div>
+    </main>
+  </div>
   <button class="btn big" id="gal-back">▶ PLAY</button>
 </section>
 
 <canvas id="confetti" hidden></canvas>
-
 <script src="three.min.js"></script>
 <script src="data.js"></script>
 <script src="app.js"></script>
+<script src="ui-enhance.js"></script>
 </body>
 </html>
