@@ -56,9 +56,12 @@ body{ margin:0; font-family:var(--font-body); color:var(--ink);
 .hud-score{ margin-left:auto; color:#fff; font-variant-numeric:tabular-nums }
 .hud-score b{ color:var(--candy-lemon) }
 .hud-btn{ border:none; background:rgba(0,0,0,.4); color:#fff; width:36px; height:36px; border-radius:50%; font-size:1rem; cursor:pointer; margin-left:8px }
-.controls{ position:absolute; left:0; right:0; bottom:0; z-index:5; display:flex; justify-content:space-between;
+.controls{ position:absolute; left:0; right:0; bottom:0; z-index:5; display:flex; justify-content:center;
   align-items:flex-end; padding:0 18px calc(20px + env(safe-area-inset-bottom,0px)); pointer-events:none }
-.controls .dpad{ display:flex; gap:12px; pointer-events:auto }
+.flyhint{ position:absolute; left:0; right:0; bottom:calc(100px + env(safe-area-inset-bottom,0px)); z-index:5;
+  text-align:center; color:rgba(74,36,16,.7); font-family:var(--font-display); font-weight:600; font-size:.85rem; pointer-events:none;
+  animation:fadehint 2.4s ease-in-out 3s forwards }
+@keyframes fadehint{ to{opacity:0} }
 .ctl{ pointer-events:auto; border:none; border-radius:18px; font-family:var(--font-display); font-weight:700;
   color:#4a2410; background:rgba(255,255,255,.9); font-size:1.6rem; width:64px; height:64px; cursor:pointer;
   box-shadow:0 6px 14px rgba(0,0,0,.4); user-select:none; -webkit-user-select:none; touch-action:none }
