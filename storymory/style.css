@@ -341,3 +341,45 @@ button{font:inherit}
  .win-wrap{max-height:76vh;overflow-y:auto}
  .memory-reveal-card{width:min(175px,52vw)}
 }
+
+
+/* V4: make result states consistent and tighten the reference-inspired layouts. */
+#screen-win[data-result="secret"] .win-confetti-label{content:""}
+#screen-win[data-result="secret"] .win-confetti-label{color:#ff65b2}
+#screen-win[data-result="over"] .win-confetti-label{color:#ffe500}
+#screen-win[data-result="secret"] .win-sticker{display:block}
+#screen-win[data-result="win"] .win-sticker,
+#screen-win[data-result="over"] .win-sticker{display:none}
+#screen-win .win-wrap{gap:10px;padding:clamp(14px,3vh,24px) clamp(12px,3vw,20px)}
+#screen-win .reveal-media{max-width:min(100%,300px)}
+#screen-win .memory-reveal-card{width:min(180px,46vw)}
+#screen-win .memory-reveal-photo{aspect-ratio:1.22/1}
+#screen-win .board{gap:7px}
+#screen-win .board-row{padding:7px 10px}
+#screen-win .board-ava{width:34px;height:34px}
+#screen-win .btn.big{padding:13px 32px}
+#screen-win .btn{font-size:1rem}
+.gallery-screen{overflow-y:auto;justify-content:flex-start;padding-top:max(20px,env(safe-area-inset-top,0px));padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
+.gallery-layout{flex:0 0 auto}
+.memory-book{background-image:repeating-linear-gradient(to bottom,transparent 0,transparent 30px,rgba(231,180,193,.28) 31px,transparent 32px)}
+.memory-book:after{content:"";position:absolute;left:50%;top:0;bottom:0;width:7px;transform:translateX(-50%);background:linear-gradient(90deg,#d8b3a2,#fff0d4,#c9a18f);opacity:.65;pointer-events:none}
+.cell{border-radius:4px}
+.cell .memory-caption{font-size:clamp(.55rem,1.5vw,.72rem);line-height:1.15}
+@media(max-width:650px){
+ .gallery-screen{gap:12px}
+ .gallery-header{flex:0 0 auto}
+ .gallery-layout{grid-template-columns:1fr;gap:12px;width:100%;max-width:480px}
+ .leader-panel{transform:none;padding:10px}
+ .leader-panel .board-row{padding:7px 9px}
+ .leader-panel .board-ava{width:32px;height:32px}
+ .leader-panel .board-bar{min-width:35px}
+ .memory-book{padding:12px 10px 13px 15px}
+ .memory-book:after{display:none}
+ .gal-grid{max-height:38vh;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+ #gal-back{margin-top:2px}
+ #screen-win .win-wrap{max-height:76vh;overflow-y:auto}
+ #screen-win .reveal-media{padding:5px}
+ #screen-win .memory-reveal-card{width:min(155px,43vw)}
+ #screen-win .board-row{gap:7px}
+ #screen-win .board-name{font-size:.9rem}
+}
