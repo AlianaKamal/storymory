@@ -99,7 +99,7 @@ function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor
 function zoneOf(i){ return Math.min(ZONES-1, Math.floor(i/PER_ZONE)); }
 function stageAtX(x){ const i=(x-760)/300; return Math.max(1, Math.min(ZONES, Math.floor(i/PER_ZONE)+1)); }
 
-function skyBand(){ return {top:110, bot:H-150}; }   // where things float
+function skyBand(){ return {top:110, bot:H-175}; }   // where things float
 function buildLevel(){
   const total=PER_ZONE*ZONES;
   const deco = POOL.length? POOL : [{id:'x',img:null}];
@@ -174,11 +174,11 @@ function draw(){
   if(warm){ g.addColorStop(0,'#ffe8a8'); g.addColorStop(1,'#ff9f7a'); }
   else { g.addColorStop(0,'#ffd1ec'); g.addColorStop(1,'#bfeaff'); }
   ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
-  // drifting clouds (we're flying)
-  ctx.fillStyle='rgba(255,255,255,.88)';
-  for(let i=0;i<9;i++){ const cx=((i*320 - camX*0.3)%worldW+worldW)%worldW; const cy=70+((i*97)%Math.max(60,H-280)); cloud(cx,cy); }
-  // 3/4 depth: a sea of clouds receding up-and-back
-  drawCloudSea(warm);
+  // layered clouds for soft depth (far=small/high/faint, near=big/low)
+  for(let i=0;i<7;i++){ const cx=((i*250 - camX*0.12)%W+W)%W; cloudScaled(cx, 70+(i*53)%110, .55, .5); }
+  for(let i=0;i<6;i++){ const cx=((i*360 - camX*0.3)%W+W)%W;  cloudScaled(cx, 150+(i*90)%170, .9, .8); }
+  // fluffy cloud bank at the bottom (gives depth, no grid)
+  drawCloudBank(warm);
 
   ctx.save(); ctx.translate(-camX,0);
   // floating hazards (candy orbs)
@@ -195,22 +195,16 @@ function draw(){
   drawVehicle();
   ctx.restore();
 }
-function drawCloudSea(warm){
-  const frontY=H-28, backY=H*0.52, inset=W*0.22;
-  const gg=ctx.createLinearGradient(0,backY,0,frontY);
-  gg.addColorStop(0, warm?'#ffe0bd':'#eafaff'); gg.addColorStop(1, warm?'#ffc496':'#cfeeff');
-  ctx.fillStyle=gg;
-  ctx.beginPath(); ctx.moveTo(0,frontY); ctx.lineTo(W,frontY); ctx.lineTo(W-inset,backY); ctx.lineTo(inset,backY); ctx.closePath(); ctx.fill();
-  // converging seams → motion + perspective
-  ctx.strokeStyle='rgba(255,255,255,.55)'; ctx.lineWidth=2;
-  const sp=80, off=((camX%sp)+sp)%sp;
-  for(let fx=-off; fx<=W+sp; fx+=sp){ const t=fx/W, bx=inset+(W-2*inset)*t; ctx.beginPath(); ctx.moveTo(fx,frontY); ctx.lineTo(bx,backY); ctx.stroke(); }
-  // depth bands
-  ctx.strokeStyle='rgba(255,255,255,.3)';
-  [0.35,0.65,0.85].forEach(d=>{ const y=frontY-(frontY-backY)*d, ix=inset*d; ctx.beginPath(); ctx.moveTo(ix,y); ctx.lineTo(W-ix,y); ctx.stroke(); });
-  // puffy far edge (sea of clouds)
-  ctx.fillStyle=warm?'#fff1e2':'#ffffff';
-  const n=9; for(let i=0;i<=n;i++){ const x=inset+(W-2*inset)*(i/n); ctx.beginPath(); ctx.arc(x,backY,13,Math.PI,0); ctx.fill(); }
+function cloudScaled(x,y,s,a){ ctx.save(); ctx.globalAlpha=a; ctx.fillStyle='#fff'; ctx.translate(x,y); ctx.scale(s,s);
+  ctx.beginPath(); ctx.arc(0,0,16,0,7); ctx.arc(18,4,20,0,7); ctx.arc(40,0,15,0,7); ctx.fill(); ctx.restore(); }
+function bankLayer(topY,r,par,color,a){ ctx.save(); ctx.globalAlpha=a; ctx.fillStyle=color;
+  ctx.fillRect(0, topY, W, H-topY);
+  const off=((camX*par)%(r*1.4)+r*1.4)%(r*1.4);
+  for(let x=-r; x<=W+r; x+=r*1.4){ ctx.beginPath(); ctx.arc(x-off, topY, r, Math.PI, 0); ctx.fill(); }
+  ctx.restore(); }
+function drawCloudBank(warm){
+  bankLayer(H-110, 44, 0.25, warm?'#ffe3c4':'#eaf7ff', .95);   // back, softer
+  bankLayer(H-70,  56, 0.5,  warm?'#fff2e2':'#ffffff', 1);     // front, fluffier
 }
 function drawHills(f,baseY,h){ const off=-camX*f; ctx.beginPath(); ctx.moveTo(0,baseY+h);
   for(let x=-200;x<W+200;x+=20){ const y=baseY-Math.abs(Math.sin((x+off)/160))*h; ctx.lineTo(x,y); } ctx.lineTo(W,baseY+h); ctx.closePath(); ctx.fill(); }
