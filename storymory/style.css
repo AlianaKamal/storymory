@@ -76,6 +76,8 @@ body{ margin:0; font-family:var(--font-body); color:var(--ink);
 .win-wrap{ display:flex; flex-direction:column; gap:14px; align-items:center; max-width:440px; width:100% }
 .win-emoji{ font-size:3.4rem }
 .win-sub{ color:var(--ink-soft); margin:0 }
+.reveal-media:empty{ display:none }
+.reveal-media img{ width:150px; height:150px; object-fit:cover; border-radius:18px; border:3px solid var(--gold); box-shadow:0 0 24px rgba(255,210,63,.5) }
 
 /* leaderboard */
 .board{ width:100%; max-width:440px; display:flex; flex-direction:column; gap:10px }
