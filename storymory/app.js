@@ -107,15 +107,26 @@ function init3D(){
   const ceil=new THREE.Mesh(new THREE.BoxGeometry(5,0.2,300), new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.5}));
   ceil.position.set(0,6,-130); scene.add(ceil);
 
-  // player (low-poly figure on a board)
+  // player — cute chibi runner (rounded shapes)
   player3d=new THREE.Group();
-  const col=me.color;
-  const board=new THREE.Mesh(new THREE.BoxGeometry(1.4,0.22,2.0), new THREE.MeshLambertMaterial({color:col})); board.position.y=0.12; player3d.add(board);
-  const body=new THREE.Mesh(new THREE.BoxGeometry(0.9,1.1,0.6), new THREE.MeshLambertMaterial({color:col})); body.position.y=1.15; player3d.add(body);
-  const head=new THREE.Mesh(new THREE.BoxGeometry(0.72,0.72,0.72), new THREE.MeshLambertMaterial({color:0xffd9a8})); head.position.y=2.1; player3d.add(head);
-  const hair=new THREE.Mesh(new THREE.BoxGeometry(0.78,0.3,0.78), new THREE.MeshLambertMaterial({color:0x3a2a22})); hair.position.y=2.42; player3d.add(hair);
-  legL=new THREE.Mesh(new THREE.BoxGeometry(0.34,0.7,0.34), new THREE.MeshLambertMaterial({color:0x394056})); legL.position.set(-0.26,0.55,0); player3d.add(legL);
-  legR=new THREE.Mesh(new THREE.BoxGeometry(0.34,0.7,0.34), new THREE.MeshLambertMaterial({color:0x394056})); legR.position.set(0.26,0.55,0); player3d.add(legR);
+  const col=me.color, skin=0xffdcb0;
+  // body (rounded, shirt colour)
+  const body=new THREE.Mesh(new THREE.CapsuleGeometry(0.44,0.5,8,16), new THREE.MeshLambertMaterial({color:col})); body.position.y=1.15; player3d.add(body);
+  // big round head
+  const head=new THREE.Mesh(new THREE.SphereGeometry(0.52,24,24), new THREE.MeshLambertMaterial({color:skin})); head.position.y=2.0; player3d.add(head);
+  // hair cap (top dome, a bit bigger than head)
+  const hair=new THREE.Mesh(new THREE.SphereGeometry(0.55,24,24,0,Math.PI*2,0,Math.PI*0.6), new THREE.MeshLambertMaterial({color:0x3a2a22})); hair.position.y=2.03; player3d.add(hair);
+  // little arms
+  const armMat=new THREE.MeshLambertMaterial({color:col});
+  const armL=new THREE.Mesh(new THREE.CapsuleGeometry(0.15,0.38,6,10), armMat); armL.position.set(-0.56,1.2,0); armL.rotation.z=0.35; player3d.add(armL);
+  const armR=new THREE.Mesh(new THREE.CapsuleGeometry(0.15,0.38,6,10), armMat); armR.position.set(0.56,1.2,0); armR.rotation.z=-0.35; player3d.add(armR);
+  // legs (groups so they swing from the hip, with shoes attached)
+  const legMat=new THREE.MeshLambertMaterial({color:0x3c4663}), shoeMat=new THREE.MeshLambertMaterial({color:0xffffff});
+  function makeLeg(x){ const grp=new THREE.Group(); grp.position.set(x,0.8,0);
+    const calf=new THREE.Mesh(new THREE.CapsuleGeometry(0.17,0.44,6,10), legMat); calf.position.y=-0.3; grp.add(calf);
+    const shoe=new THREE.Mesh(new THREE.SphereGeometry(0.2,12,12), shoeMat); shoe.scale.set(1,0.68,1.5); shoe.position.set(0,-0.6,0.14); grp.add(shoe);
+    player3d.add(grp); return grp; }
+  legL=makeLeg(-0.22); legR=makeLeg(0.22);
   scene.add(player3d);
 
   THREEok=true;
@@ -134,15 +145,25 @@ function makeCoin(){ const g=new THREE.Group();
   const coin=new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.5,0.12,20), new THREE.MeshLambertMaterial({color:0xffd23f,emissive:0x7a5c00,emissiveIntensity:.3}));
   coin.rotation.x=Math.PI/2; g.add(coin); return g; }
 function makeObstacle(typ,Z){ const g=new THREE.Group();
-  if(typ===0){ const seat=new THREE.Mesh(new THREE.BoxGeometry(1.1,0.3,1.1),new THREE.MeshLambertMaterial({color:0x4a5568})); seat.position.y=0.9; g.add(seat);
-    const back=new THREE.Mesh(new THREE.BoxGeometry(1.1,1.0,0.25),new THREE.MeshLambertMaterial({color:0x2d3748})); back.position.set(0,1.4,-0.4); g.add(back); }
-  else if(typ===1){ const b=new THREE.Mesh(new THREE.BoxGeometry(1.3,1.3,1.3),new THREE.MeshLambertMaterial({color:0xd9a66b})); b.position.y=0.65; g.add(b); }
-  else { const top=new THREE.Mesh(new THREE.BoxGeometry(1.8,0.25,1.0),new THREE.MeshLambertMaterial({color:(Z.accent)})); top.position.y=1.0; g.add(top);
-    for(const lx of [-0.7,0.7]){ const leg=new THREE.Mesh(new THREE.BoxGeometry(0.18,1.0,0.18),new THREE.MeshLambertMaterial({color:0x8a5a2a})); leg.position.set(lx,0.5,0); g.add(leg);} }
+  if(typ===0){ // cute round office chair
+    const seat=new THREE.Mesh(new THREE.CylinderGeometry(0.6,0.6,0.26,18),new THREE.MeshLambertMaterial({color:0x6678a8})); seat.position.y=0.95; g.add(seat);
+    const back=new THREE.Mesh(new THREE.CapsuleGeometry(0.46,0.5,6,12),new THREE.MeshLambertMaterial({color:0x4a5a8c})); back.position.set(0,1.5,-0.42); back.scale.set(1,1,0.42); g.add(back);
+    const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.1,0.7,10),new THREE.MeshLambertMaterial({color:0xaab0bd})); pole.position.y=0.5; g.add(pole); }
+  else if(typ===1){ // water cooler
+    const b=new THREE.Mesh(new THREE.CylinderGeometry(0.58,0.52,1.25,20),new THREE.MeshLambertMaterial({color:0x56c7e8})); b.position.y=0.63; g.add(b);
+    const cap=new THREE.Mesh(new THREE.SphereGeometry(0.5,16,16),new THREE.MeshLambertMaterial({color:0xcff3ff,transparent:true,opacity:.9})); cap.position.y=1.45; cap.scale.set(1,0.85,1); g.add(cap); }
+  else { // round table
+    const top=new THREE.Mesh(new THREE.CylinderGeometry(1.0,1.0,0.22,24),new THREE.MeshLambertMaterial({color:Z.accent})); top.position.y=1.05; g.add(top);
+    const leg=new THREE.Mesh(new THREE.CylinderGeometry(0.16,0.2,1.0,12),new THREE.MeshLambertMaterial({color:0xa06a34})); leg.position.y=0.5; g.add(leg);
+    const base=new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.5,0.12,16),new THREE.MeshLambertMaterial({color:0xa06a34})); base.position.y=0.06; g.add(base); }
   return g; }
 function makeSecret(){ const g=new THREE.Group();
-  const box=new THREE.Mesh(new THREE.BoxGeometry(1,1,1), new THREE.MeshLambertMaterial({color:0xff5c8a,emissive:0xff2e97,emissiveIntensity:.5})); box.position.y=1.1; g.add(box);
-  const rib=new THREE.Mesh(new THREE.BoxGeometry(1.05,1.05,0.18), new THREE.MeshLambertMaterial({color:0xffd23f})); rib.position.y=1.1; g.add(rib); return g; }
+  const box=new THREE.Mesh(new THREE.BoxGeometry(1.1,1.0,1.1), new THREE.MeshLambertMaterial({color:0xff5c8a,emissive:0xff2e97,emissiveIntensity:.45})); box.position.y=1.05; g.add(box);
+  const ribV=new THREE.Mesh(new THREE.BoxGeometry(0.24,1.02,1.12),new THREE.MeshLambertMaterial({color:0xffd23f})); ribV.position.y=1.05; g.add(ribV);
+  const ribH=new THREE.Mesh(new THREE.BoxGeometry(1.12,1.02,0.24),new THREE.MeshLambertMaterial({color:0xffd23f})); ribH.position.y=1.05; g.add(ribH);
+  const bowMat=new THREE.MeshLambertMaterial({color:0xffe066,emissive:0xffcf33,emissiveIntensity:.4});
+  for(const bx of [-0.26,0.26]){ const b=new THREE.Mesh(new THREE.SphereGeometry(0.28,14,14),bowMat); b.position.set(bx,1.66,0); b.scale.set(1,0.72,0.72); g.add(b); }
+  return g; }
 function makeProp(side,Z){ const g=new THREE.Group(); const t=Math.floor(Math.random()*3);
   if(t===0){ const pot=new THREE.Mesh(new THREE.CylinderGeometry(0.3,0.25,0.5,10),new THREE.MeshLambertMaterial({color:0xb5651d})); pot.position.y=0.25; g.add(pot);
     const leaf=new THREE.Mesh(new THREE.SphereGeometry(0.5,8,8),new THREE.MeshLambertMaterial({color:0x4caf50})); leaf.position.y=0.9; g.add(leaf); }
