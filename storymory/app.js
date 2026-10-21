@@ -81,8 +81,8 @@ window.addEventListener('resize',()=>{ if(!$('#screen-game').hidden) resize(); }
 
 // the office route (preview = 2 zones; more to come)
 const ZONES=[
-  {id:'entrance',    name:'KOLEJ KOMUNITI TEMERLOH', sky:['#cfe0ff','#9fc0ef'], floor:'#b9c6dd', floor2:'#aab9d3', wall:'#7FA8E0', deco:'#ffd23f'},
-  {id:'pengambilan', name:'Bilik Pengambilan',       sky:['#ffe6f3','#ffd0a8'], floor:'#ffe0b0', floor2:'#ffd49a', wall:'#ff9ec4', deco:'#ff5c8a'},
+  {id:'entrance',    name:'KOLEJ KOMUNITI TEMERLOH', ceil:'#bcd4f5', wall:'#7fb0ef', floor:'#eef3fb', floor2:'#d6e3f6', carpet:'#8ab8ff', deco:'#ffd23f', props:['plant','board','lamp','cooler']},
+  {id:'pengambilan', name:'Bilik Pengambilan',       ceil:'#ffe0ef', wall:'#ff9ec4', floor:'#fff4e6', floor2:'#ffe3c6', carpet:'#ffb3d6', deco:'#ff5c8a', props:['plant','chair','board','cake']},
 ];
 const ZONE_LEN=2600;
 
@@ -169,32 +169,46 @@ function roundRect(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,
 
 function draw(){
   const Z=ZONES[zoneIdx], hy=horizonY(), gy=groundNearY(), cx=W/2;
-  // sky / upper wall
-  const g=ctx.createLinearGradient(0,0,0,hy); g.addColorStop(0,Z.sky[0]); g.addColorStop(1,Z.sky[1]);
-  ctx.fillStyle=g; ctx.fillRect(0,0,W,hy);
-  // back wall band + zone sign
-  ctx.fillStyle=Z.wall; ctx.fillRect(W*0.30,hy-46,W*0.40,46);
-  ctx.fillStyle='#fff'; ctx.font='bold '+Math.max(9,Math.min(13,W*0.02))+'px '+FONT; ctx.textAlign='center'; ctx.textBaseline='middle';
-  wrapText(Z.name, cx, hy-23, W*0.36, 13);
+  const nL=W*0.04, nR=W*0.96, fL=cx-W*0.07, fR=cx+W*0.07;
+  ctx.fillStyle=shade(Z.wall,-22); ctx.fillRect(0,0,W,H);   // room corners base (no gaps)
 
-  // floor trapezoid
-  const nL=W*0.06, nR=W*0.94, fL=cx-W*0.07, fR=cx+W*0.07;
+  // CEILING (trapezoid from top-wide to horizon-narrow) + light panels
+  ctx.fillStyle=Z.ceil; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(W,0); ctx.lineTo(fR,hy); ctx.lineTo(fL,hy); ctx.closePath(); ctx.fill();
+  { const period=360, off=((dist)%period);
+    for(let d=off; d<2600; d+=period){ const s=proj(d), y=hy+(0-hy)*(1-s)*0 + hy*(1-s); // ceiling y recedes to hy
+      const yy=hy*(1-s); const ww=(W*0.5)*s;
+      ctx.fillStyle='rgba(255,255,255,.65)'; ctx.globalAlpha=Math.min(1,s*1.4);
+      roundRect(cx-ww*0.28, yy+6, ww*0.56, Math.max(2,10*s),4*s); ctx.fill(); }
+    ctx.globalAlpha=1; }
+
+  // BACK WALL facade + sign
+  ctx.fillStyle=shade(Z.wall,15); ctx.fillRect(fL-6,hy-54,(fR-fL)+12,54);
+  // little windows on the facade
+  ctx.fillStyle='rgba(255,255,255,.6)'; for(let i=0;i<3;i++){ roundRect(fL+4+i*((fR-fL-8)/3), hy-50, (fR-fL-14)/3, 10,2); ctx.fill(); }
+  ctx.fillStyle=Z.deco; roundRect(fL-2,hy-30,(fR-fL)+4,20,5); ctx.fill();
+  ctx.fillStyle='#fff'; ctx.font='bold '+Math.max(7,Math.min(11,W*0.017))+'px '+FONT; ctx.textAlign='center'; ctx.textBaseline='middle';
+  wrapText(Z.name, cx, hy-20, (fR-fL)-2, 10);
+
+  // FLOOR trapezoid
   ctx.fillStyle=Z.floor; ctx.beginPath(); ctx.moveTo(nL,gy); ctx.lineTo(nR,gy); ctx.lineTo(fR,hy); ctx.lineTo(fL,hy); ctx.closePath(); ctx.fill();
-  // moving floor stripes (motion)
+  // centre carpet (runner rug)
+  ctx.fillStyle=Z.carpet; ctx.globalAlpha=.55;
+  ctx.beginPath(); ctx.moveTo(cx-laneGap()*1.5,gy); ctx.lineTo(cx+laneGap()*1.5,gy); ctx.lineTo(cx+8,hy); ctx.lineTo(cx-8,hy); ctx.closePath(); ctx.fill(); ctx.globalAlpha=1;
+  // moving floor rungs (motion)
   ctx.strokeStyle=Z.floor2; ctx.lineWidth=2;
-  const period=240, off=((dist*1)%period);
+  const period=240, off=((dist)%period);
   for(let d=off; d<2600; d+=period){ const s=proj(d); const y=hy+(gy-hy)*s; ctx.globalAlpha=Math.min(1,s*1.4);
-    ctx.beginPath(); ctx.moveTo(cx-(W*0.44)*s,y); ctx.lineTo(cx+(W*0.44)*s,y); ctx.stroke(); }
+    ctx.beginPath(); ctx.moveTo(cx-(W*0.46)*s,y); ctx.lineTo(cx+(W*0.46)*s,y); ctx.stroke(); }
   ctx.globalAlpha=1;
-  // lane dividers (converge to vanishing point)
-  ctx.strokeStyle='rgba(255,255,255,.55)'; ctx.setLineDash([14,14]); ctx.lineWidth=3;
+  // lane dividers
+  ctx.strokeStyle='rgba(255,255,255,.5)'; ctx.setLineDash([14,14]); ctx.lineWidth=3;
   [-0.5,0.5].forEach(k=>{ ctx.beginPath(); ctx.moveTo(cx+k*laneGap(),gy); ctx.lineTo(cx+k*8,hy); ctx.stroke(); });
   ctx.setLineDash([]);
-  // side walls
-  ctx.fillStyle=shade(Z.wall,-10); ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(nL,gy); ctx.lineTo(fL,hy); ctx.lineTo(0,hy); ctx.closePath(); ctx.fill();
+  // SIDE WALLS
+  ctx.fillStyle=shade(Z.wall,-8); ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(nL,gy); ctx.lineTo(fL,hy); ctx.lineTo(0,hy); ctx.closePath(); ctx.fill();
   ctx.beginPath(); ctx.moveTo(W,0); ctx.lineTo(nR,gy); ctx.lineTo(fR,hy); ctx.lineTo(W,hy); ctx.closePath(); ctx.fill();
-  // scrolling wall panels (doors/posters)
-  drawWallPanels(Z,hy,gy,nL,fL,-1); drawWallPanels(Z,hy,gy,nR,fR,1);
+  // cute scrolling side props (plants, boards, lamps…)
+  drawSideProps(Z,hy,gy,-1); drawSideProps(Z,hy,gy,1);
 
   // objects far -> near
   const order=objs.slice().sort((a,b)=>b.z-a.z);
@@ -218,16 +232,30 @@ function wrapText(t,x,y,maxW,lh){ const words=t.split(' '); let line='',yy=y, li
 function shade(hex,p){ const n=parseInt(hex.slice(1),16); let r=(n>>16)+p,gg=((n>>8)&255)+p,b=(n&255)+p;
   r=Math.max(0,Math.min(255,r));gg=Math.max(0,Math.min(255,gg));b=Math.max(0,Math.min(255,b));
   return '#'+((1<<24)+(r<<16)+(gg<<8)+b).toString(16).slice(1); }
-function drawWallPanels(Z,hy,gy,nX,fX,side){
-  const period=320, off=((dist*1)%period);
-  for(let d=off; d<2600; d+=period){ const s=proj(d), s2=proj(d+120);
-    const y1=hy+(gy-hy)*s, y2=hy+(gy-hy)*s2;
-    const x1=nX+(fX-nX)*(1-s), x2=nX+(fX-nX)*(1-s2);
-    ctx.fillStyle=shade(Z.wall,20); ctx.globalAlpha=Math.min(1,s*1.5);
-    ctx.beginPath(); ctx.moveTo(x1,y1-70*s); ctx.lineTo(x2,y2-70*s2); ctx.lineTo(x2,y2-18*s2); ctx.lineTo(x1,y1-18*s); ctx.closePath(); ctx.fill();
-    ctx.globalAlpha=1;
+function drawSideProps(Z,hy,gy,side){
+  const cx=W/2, period=300, off=((dist)%period);
+  for(let d=2400; d>off-period; d-=period){        // far -> near so nearer props overlap
+    const dd=d-off; if(dd<-20) continue; const s=proj(dd); if(s<0.05) continue;
+    const x=cx + side*(laneGap()*2.05)*s;           // out in the side gutter
+    const y=hy+(gy-hy)*s;
+    const type=Z.props[((d/period|0)+(side>0?1:0))%Z.props.length];
+    drawProp(x,y,s,type,Z,side);
   }
 }
+function drawProp(x,y,s,type,Z,side){ ctx.save(); ctx.translate(x,y); const u=s;
+  if(type==='plant'){ ctx.fillStyle='#b5651d'; roundRect(-12*u,-16*u,24*u,16*u,4*u); ctx.fill();
+    ctx.fillStyle='#4caf50'; ctx.beginPath(); ctx.arc(0,-26*u,16*u,0,7); ctx.arc(-11*u,-18*u,11*u,0,7); ctx.arc(11*u,-18*u,11*u,0,7); ctx.fill(); }
+  else if(type==='board'){ ctx.fillStyle='#8d6e63'; roundRect(-22*u,-60*u,44*u,44*u,4*u); ctx.fill();
+    ctx.fillStyle='#fff'; roundRect(-18*u,-56*u,36*u,36*u,3*u); ctx.fill();
+    ['#ff5c8a','#ffd23f','#38bdf8','#7fd38a'].forEach((c,i)=>{ ctx.fillStyle=c; roundRect((-14+ (i%2)*16)*u, (-50+((i/2|0)*16))*u, 12*u,12*u,2*u); ctx.fill(); }); }
+  else if(type==='lamp'){ ctx.fillStyle='#9aa0ad'; ctx.fillRect(-2*u,-54*u,4*u,54*u); ctx.fillStyle='#fff3b0'; ctx.beginPath(); ctx.moveTo(-14*u,-54*u); ctx.lineTo(14*u,-54*u); ctx.lineTo(8*u,-40*u); ctx.lineTo(-8*u,-40*u); ctx.closePath(); ctx.fill(); }
+  else if(type==='cooler'){ ctx.fillStyle='#e0f0ff'; roundRect(-12*u,-44*u,24*u,44*u,4*u); ctx.fill(); ctx.fillStyle='#4fc3f7'; roundRect(-10*u,-58*u,20*u,16*u,6*u); ctx.fill(); }
+  else if(type==='chair'){ const col=['#ff5c8a','#ffd23f','#38bdf8','#a855f7'][(x|0)%4]; ctx.fillStyle=col; roundRect(-12*u,-24*u,24*u,16*u,5*u); ctx.fill(); roundRect(-12*u,-46*u,24*u,22*u,6*u); ctx.fill(); ctx.fillStyle='#555'; ctx.fillRect(-2*u,-10*u,4*u,10*u); }
+  else if(type==='cake'){ // banquet / treats table (the lepak spot)
+    ctx.fillStyle='#c98a5e'; roundRect(-26*u,-20*u,52*u,10*u,3*u); ctx.fill(); ctx.fillStyle='#8d5a37'; ctx.fillRect(-22*u,-10*u,6*u,12*u); ctx.fillRect(16*u,-10*u,6*u,12*u);
+    ctx.fillStyle='#fff'; roundRect(-16*u,-34*u,32*u,16*u,4*u); ctx.fill(); ctx.fillStyle='#ff8fb3'; roundRect(-16*u,-30*u,32*u,6*u,3*u); ctx.fill();
+    ctx.fillStyle='#ff5c8a'; ctx.beginPath(); ctx.arc(0,-38*u,4*u,0,7); ctx.fill(); }
+  ctx.restore(); }
 function drawCoinP(x,y,s,item){ const r=26*s; if(r<3)return; ctx.save(); ctx.translate(x,y-40*s);
   ctx.shadowColor='rgba(255,210,63,.9)'; ctx.shadowBlur=12*s; ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(0,0,r+3*s,0,7); ctx.fill(); ctx.shadowBlur=0;
   const im=item&&item.img?getImg(item.img):null;
