@@ -172,16 +172,44 @@ function init3D(){
   // Big chibi head with a friendly face, facing the camera (+Z).
   const head=new THREE.Mesh(new THREE.SphereGeometry(0.47,24,20),skinMat);
   head.position.set(0,1.62,0.12); player3d.add(head);
-  const hair=new THREE.Mesh(new THREE.SphereGeometry(0.50,24,20,0,Math.PI*2,0,Math.PI*0.64),
-    new THREE.MeshLambertMaterial({color:hairColor}));
-  hair.position.set(0,1.68,0.08); player3d.add(hair);
-  // Fringe / side locks to give the head a softer cartoon silhouette.
   const hairMat=new THREE.MeshLambertMaterial({color:hairColor});
-  const fringe=new THREE.Mesh(new THREE.SphereGeometry(0.22,14,12),hairMat);
-  fringe.scale.set(1.25,.58,.6); fringe.position.set(0,1.94,-.43); player3d.add(fringe);
-  for(const side of [-1,1]){
-    const lock=new THREE.Mesh(new THREE.SphereGeometry(.17,12,10),hairMat);
-    lock.position.set(side*.37,1.58,-.25); lock.scale.set(.8,1.2,.7); player3d.add(lock);
+  if(me.id==='Haziq'){
+    // Haziq keeps the tousled, spiky dark-brown hairstyle from the character card.
+    const hair=new THREE.Mesh(new THREE.SphereGeometry(0.50,24,20,0,Math.PI*2,0,Math.PI*0.64),hairMat);
+    hair.position.set(0,1.68,0.08); player3d.add(hair);
+    const fringe=new THREE.Mesh(new THREE.SphereGeometry(0.22,14,12),hairMat);
+    fringe.scale.set(1.25,.58,.6); fringe.position.set(0,1.94,-.43); player3d.add(fringe);
+    for(let i=0;i<4;i++){
+      const spike=new THREE.Mesh(new THREE.ConeGeometry(.12,.25,8),hairMat);
+      spike.position.set((i-1.5)*.18,2.00,.02); spike.rotation.z=(i-1.5)*-.19; player3d.add(spike);
+    }
+    for(const side of [-1,1]){
+      const lock=new THREE.Mesh(new THREE.SphereGeometry(.17,12,10),hairMat);
+      lock.position.set(side*.37,1.58,-.25); lock.scale.set(.8,1.2,.7); player3d.add(lock);
+    }
+  } else {
+    // Nurin and Yana wear a dark-brown hijab. The hood covers the back and sides
+    // of the head, while leaving the face opening on the forward (-Z) side clear.
+    const hijabMat=new THREE.MeshLambertMaterial({color:0x4a2b26});
+    const hoodBack=new THREE.Mesh(
+      new THREE.SphereGeometry(.515,28,24,0,Math.PI,0,Math.PI),
+      hijabMat
+    );
+    hoodBack.position.set(0,1.67,.10); player3d.add(hoodBack);
+    // Soft side folds frame the head and blend down into the shoulders.
+    for(const side of [-1,1]){
+      const fold=new THREE.Mesh(new THREE.SphereGeometry(1,16,14),hijabMat);
+      fold.position.set(side*.355,1.51,-.005);
+      fold.scale.set(.16,.36,.32);
+      player3d.add(fold);
+    }
+    const drape=new THREE.Mesh(new THREE.SphereGeometry(1,20,16),hijabMat);
+    drape.position.set(0,1.22,.13);
+    drape.scale.set(.405,.43,.31);
+    player3d.add(drape);
+    // A subtle stitched edge on the back of the hijab.
+    const seam=new THREE.Mesh(new THREE.TorusGeometry(.245,.012,6,24,Math.PI),new THREE.MeshLambertMaterial({color:0x68413a}));
+    seam.position.set(0,1.49,.392); seam.rotation.x=Math.PI/2; player3d.add(seam);
   }
   // Eyes, blush and smile are simple geometry so no external art files are needed.
   const eyeMat=new THREE.MeshBasicMaterial({color:0x30233a});
@@ -198,21 +226,17 @@ function init3D(){
   const mouth=new THREE.Mesh(new THREE.TorusGeometry(.055,.012,6,12,Math.PI),new THREE.MeshBasicMaterial({color:0x8b3d53}));
   mouth.position.set(0,1.49,-.575); mouth.rotation.z=Math.PI; player3d.add(mouth);
   // Optional cute hair accessories distinguish the characters.
-  if(me.id==='Nurin'){
-    const bowMat=new THREE.MeshLambertMaterial({color:0xff4fa3});
-    for(const side of [-1,1]){
-      const bow=new THREE.Mesh(new THREE.SphereGeometry(.12,10,8),bowMat);
-      bow.scale.set(1.2,.7,.55); bow.position.set(side*.31,1.99,-.28); player3d.add(bow);
-    }
-  } else if(me.id==='Haziq'){
+  if(me.id==='Haziq'){
     const spikeMat=new THREE.MeshLambertMaterial({color:0x34221c});
     for(let i=0;i<3;i++){
       const spike=new THREE.Mesh(new THREE.ConeGeometry(.12,.27,8),spikeMat);
       spike.position.set((i-1)*.17,2.02,-.12); spike.rotation.z=(i-1)*-.25; player3d.add(spike);
     }
   } else {
-    const clip=new THREE.Mesh(new THREE.SphereGeometry(.11,10,8),new THREE.MeshLambertMaterial({color:0xffd83d}));
-    clip.position.set(.36,1.91,-.28); player3d.add(clip);
+    // Tiny pink / gold stitch charm on the hijab edge; no exposed hair clips.
+    const charmColor=me.id==='Nurin'?0xff70ad:0xffd83d;
+    const charm=new THREE.Mesh(new THREE.SphereGeometry(.065,10,8),new THREE.MeshLambertMaterial({color:charmColor}));
+    charm.position.set(me.id==='Nurin'?.30:-.30,1.48,-.25); player3d.add(charm);
   }
   // Arms angle forward to the handlebars.
   const armMat=new THREE.MeshLambertMaterial({color:col});
