@@ -177,10 +177,8 @@ function draw(){
   // drifting clouds (we're flying)
   ctx.fillStyle='rgba(255,255,255,.88)';
   for(let i=0;i<9;i++){ const cx=((i*320 - camX*0.3)%worldW+worldW)%worldW; const cy=70+((i*97)%Math.max(60,H-280)); cloud(cx,cy); }
-  // far candy ground along the bottom
-  const baseY=H-66;
-  ctx.fillStyle=warm?'#f0a56a':'#9be0a0'; drawHills(0.5, baseY, 44);
-  ctx.fillStyle=warm?'#e08a5a':'#7fd38a'; drawHills(0.8, baseY+22, 32);
+  // 3/4 depth: a sea of clouds receding up-and-back
+  drawCloudSea(warm);
 
   ctx.save(); ctx.translate(-camX,0);
   // floating hazards (candy orbs)
@@ -196,6 +194,23 @@ function draw(){
 
   drawVehicle();
   ctx.restore();
+}
+function drawCloudSea(warm){
+  const frontY=H-28, backY=H*0.52, inset=W*0.22;
+  const gg=ctx.createLinearGradient(0,backY,0,frontY);
+  gg.addColorStop(0, warm?'#ffe0bd':'#eafaff'); gg.addColorStop(1, warm?'#ffc496':'#cfeeff');
+  ctx.fillStyle=gg;
+  ctx.beginPath(); ctx.moveTo(0,frontY); ctx.lineTo(W,frontY); ctx.lineTo(W-inset,backY); ctx.lineTo(inset,backY); ctx.closePath(); ctx.fill();
+  // converging seams → motion + perspective
+  ctx.strokeStyle='rgba(255,255,255,.55)'; ctx.lineWidth=2;
+  const sp=80, off=((camX%sp)+sp)%sp;
+  for(let fx=-off; fx<=W+sp; fx+=sp){ const t=fx/W, bx=inset+(W-2*inset)*t; ctx.beginPath(); ctx.moveTo(fx,frontY); ctx.lineTo(bx,backY); ctx.stroke(); }
+  // depth bands
+  ctx.strokeStyle='rgba(255,255,255,.3)';
+  [0.35,0.65,0.85].forEach(d=>{ const y=frontY-(frontY-backY)*d, ix=inset*d; ctx.beginPath(); ctx.moveTo(ix,y); ctx.lineTo(W-ix,y); ctx.stroke(); });
+  // puffy far edge (sea of clouds)
+  ctx.fillStyle=warm?'#fff1e2':'#ffffff';
+  const n=9; for(let i=0;i<=n;i++){ const x=inset+(W-2*inset)*(i/n); ctx.beginPath(); ctx.arc(x,backY,13,Math.PI,0); ctx.fill(); }
 }
 function drawHills(f,baseY,h){ const off=-camX*f; ctx.beginPath(); ctx.moveTo(0,baseY+h);
   for(let x=-200;x<W+200;x+=20){ const y=baseY-Math.abs(Math.sin((x+off)/160))*h; ctx.lineTo(x,y); } ctx.lineTo(W,baseY+h); ctx.closePath(); ctx.fill(); }
