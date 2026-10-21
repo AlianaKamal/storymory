@@ -297,3 +297,47 @@ button{font:inherit}
  .win-emoji{font-size:2.4rem}
  .reveal-media img{width:105px;height:105px}
 }
+
+
+/* POSTER MATCH V3 — fix visible issues from the real phone screenshots */
+.hud{gap:6px;justify-content:space-between}
+.hud-profile{display:flex;align-items:center;gap:5px;min-width:0}
+.hud-avatar{width:36px;height:36px;flex:0 0 auto;display:grid;place-items:center;border:2px solid #fff;border-radius:50%;overflow:hidden;background:linear-gradient(145deg,#ffacd2,#ff3197);box-shadow:0 3px 0 #7d1451;font-size:1rem}
+.hud-avatar img{width:100%;height:100%;object-fit:cover}
+.hud-char{white-space:nowrap}
+.hud-lives{white-space:nowrap;font-size:.76rem;letter-spacing:-.13em;text-shadow:0 1px 2px #7d1451}
+.hud-stage{max-width:24vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.photo-btn{position:relative;display:flex;align-items:center;justify-content:center}
+.photo-btn small{position:absolute;right:-5px;bottom:-7px;background:#fff;color:#4c2c80;border:1px solid #8d4dff;border-radius:999px;padding:1px 4px;font:900 .55rem 'Nunito',sans-serif;white-space:nowrap}
+.pause-btn{background:linear-gradient(145deg,#ff67b0,#ff3197);color:white;box-shadow:0 3px 0 #a10f5b}
+.win-confetti-label{font-size:clamp(1.1rem,4.8vw,1.8rem);text-align:center}
+.win-sticker[hidden]{display:none!important}
+.win-wrap .scr-title{line-height:1.1}
+.reveal-media{display:flex;justify-content:center;align-items:center}
+.memory-reveal-card{width:min(220px,58vw);padding:9px 9px 12px;background:#fff;border:5px solid white;border-radius:5px;box-shadow:0 5px 0 #e6b9c8,0 8px 0 #48205b;transform:rotate(-2deg);color:#53204c;display:flex;flex-direction:column;gap:6px}
+.memory-reveal-photo{aspect-ratio:1/1;background:linear-gradient(145deg,#11c5f4,#4164ec 60%,#9c4ce2);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;gap:7px}
+.memory-reveal-photo span{font-size:3rem}
+.memory-reveal-photo b{font:900 .68rem 'Nunito',sans-serif;letter-spacing:.04em}
+.memory-reveal-card strong{font:800 .9rem 'Nunito',sans-serif}
+.memory-reveal-card small{font:700 .75rem 'Nunito',sans-serif;color:#8e5a7c}
+.reveal-media:empty{display:none}
+.memory-placeholder{background:linear-gradient(145deg,#12c8f4,#4265ee 60%,#9b4fe6)!important;color:#fff!important;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px}
+.memory-placeholder span{font-size:2rem}
+.memory-placeholder small{font:800 .55rem 'Nunito',sans-serif;text-align:center}
+.cell .memory-caption{z-index:2;max-height:40%;overflow:hidden}
+.cell.locked{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#fff}
+.cell.locked .lock-mark{font-size:1.5rem}
+.cell.locked small{font:800 .7rem 'Nunito',sans-serif}
+@media(max-width:520px){
+ .hud{gap:3px;padding-left:7px;padding-right:7px}
+ .hud-profile{gap:3px}
+ .hud-avatar{width:29px;height:29px;font-size:.8rem}
+ .hud-char{font-size:.7rem;padding:5px 6px}
+ .hud-lives{font-size:.57rem;letter-spacing:-.17em}
+ .hud-stage{max-width:17vw;font-size:.54rem;padding:5px 5px}
+ .hud-score{font-size:.72rem;padding:5px 5px}
+ .hud-btn{width:31px;height:31px;font-size:.83rem}
+ .photo-btn small{font-size:.46rem;right:-4px}
+ .win-wrap{max-height:76vh;overflow-y:auto}
+ .memory-reveal-card{width:min(175px,52vw)}
+}
